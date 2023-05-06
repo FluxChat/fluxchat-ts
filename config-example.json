@@ -1,0 +1,27 @@
+{
+	"address": "${FLUXCHAT_ADDRESS}",
+	"port": ${FLUXCHAT_PORT},
+	"contact": "${FLUXCHAT_CONTACT}",
+	"id": "${FLUXCHAT_ID}",
+	"data_dir": "${FLUXCHAT_DATA_DIR}",
+	"challenge": {
+		"min": 15,
+		"max": 20
+	},
+	"address_book": {
+		"max_clients": 20,
+		"client_retention_time": 24
+	},
+	"client": {
+		"auth_timeout": 10,
+		"action_retention_time": 5
+	},
+	"discovery": {
+		"enabled": false,
+		"port": 26000
+	},
+	"bootstrap": "default",
+	"mail": {
+		"retention_time": 24
+	}
+}

@@ -1,0 +1,35 @@
+{
+  "name": "fluxchat_ts",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon -x \"npm run build\"",
+    "build": "tsc --build --verbose",
+    "start": "node build/src/app/Server.js",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com:FluxChat/fluxchat-ts.git"
+  },
+  "keywords": [],
+  "author": "Christian Mayer <christian@fox21.at>",
+  "license": "MIT",
+  "dependencies": {
+    "@types/bs58": "^4.0.1",
+    "@types/minimist": "^1.2.2",
+    "bs58": "^5.0.0",
+    "minimist": "^1.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "^18.16.0",
+    "jest": "^29.5.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "npm": ">=1.0.0",
+    "node": ">=1.0.0"
+  }
+}
