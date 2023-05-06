@@ -9,18 +9,17 @@ console.log(publicKey);
 console.log(privateKey);
 
 console.log(
-	publicKey.export({
-		type: 'pkcs1',
-		format: 'pem',
+  publicKey.export({
+    type: 'pkcs1',
+    format: 'pem',
+  }),
 
-	}),
-
-	privateKey.export({
-		type: 'pkcs1',
-		format: 'pem',
+  privateKey.export({
+    type: 'pkcs1',
+    format: 'pem',
     cipher: 'aes-256-cbc',
     passphrase: 'password',
-	})
+  })
 );
 
 // const options = {
