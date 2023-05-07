@@ -6,6 +6,11 @@ on:
       - develop
   workflow_dispatch:
 
+env:
+  DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+  DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+  DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+
 jobs:
   test_old_versions:
     runs-on: ubuntu-latest
