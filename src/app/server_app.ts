@@ -21,6 +21,8 @@ class ServerApp {
 
   public run(): void {
     console.log('-> run()');
+
+    this._server.start();
   }
 }
 const options = {

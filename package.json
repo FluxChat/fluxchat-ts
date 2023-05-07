@@ -1,7 +1,7 @@
 {
   "name": "fluxchat_ts",
   "version": "0.0.0",
-  "description": "",
+  "description": "A decentralized, peer-to-peer, encrypted chat written in TypeScript.",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon -x \"npm run build\"",
