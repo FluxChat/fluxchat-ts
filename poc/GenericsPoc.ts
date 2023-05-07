@@ -10,12 +10,12 @@ class Client {
   }
 }
 
-type keyType = string | number;
-type DataType<K extends keyType, T> = { [key in K]: T };
+type KeyType = string | number;
+type DataType<K extends KeyType, T> = { [key in K]: T };
 
-abstract class Database<K extends keyType, T extends object> {
+abstract class Database<K extends KeyType, T extends object> {
   protected readonly _filePath: string | null = null;
-  // protected _data: { [key: keyType]: T } = {};
+  // protected _data: { [key: KeyType]: T } = {};
   // protected _data: { [key in K]: T };
   protected abstract _data: DataType<K, T>;
   // protected _data: OptionsFlags<K, T> = {};
@@ -25,7 +25,7 @@ abstract class Database<K extends keyType, T extends object> {
     // this._data = {} as DataType<K, T>;
   }
 
-  public load(defaultData: any = {}) {
+  public load(defaultData: DataType<K, T> = {} as DataType<K, T>) {
     console.log('-> Database.load()');
     if (this._filePath !== null && fs.existsSync(this._filePath)) {
       const data: string = fs.readFileSync(this._filePath, 'utf8');
