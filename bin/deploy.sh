@@ -7,6 +7,8 @@ cd "${SCRIPT_BASEDIR}/.."
 echo 'Origin IP'
 curl -s https://httpbin.org/ip
 
+set -e
+
 # Test SSH.
 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${DEPLOY_USER}@${DEPLOY_HOST} 'date +"%F %T %z"'
 
