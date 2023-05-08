@@ -1,5 +1,5 @@
 {
-  "name": "fluxchat_ts",
+  "name": "@fluxchat/fluxchat",
   "version": "0.0.0",
   "description": "A decentralized, peer-to-peer, encrypted chat written in TypeScript.",
   "main": "index.js",
@@ -9,11 +9,15 @@
     "start": "node build/src/app/Server.js",
     "test": "jest"
   },
+  "homepage": "https://fluxchat.dev/",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com:FluxChat/fluxchat-ts.git"
+    "url": "git+ssh://git@github.com/FluxChat/fluxchat-ts.git"
   },
-  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/FluxChat/fluxchat-ts/issues"
+  },
+  "keywords": ["decentralized", "peer-to-peer", "p2p", "chat", "mail", "messaging", "tcp", "tls", "asymmetric", "crypto", "cryptography", "encryption", "privacy", "anonymous", "typescript"],
   "author": "Christian Mayer <christian@fox21.at>",
   "license": "MIT",
   "dependencies": {
