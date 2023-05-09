@@ -1,12 +1,15 @@
 
 import * as fs from 'fs';
 
-export abstract class Database {
+type KeyType = string | number;
+export type DataType<K extends KeyType, T> = { [key in K]: T };
+
+export abstract class Database<K extends KeyType, T extends object> {
   protected readonly _filePath: string | null = null;
-  protected _data: any = {};
+  protected abstract _data: DataType<K, T>;
   protected _changed: boolean = false;
 
-  public load(defaultData: any = {}) {
+  public load(defaultData: DataType<K, T> = {} as DataType<K, T>): void {
     console.log('-> Database.load()');
 
     if (this._filePath === null) {
@@ -23,11 +26,20 @@ export abstract class Database {
     }
   }
 
-  public save() {
+  public save(): void {
     console.log('-> Database.save()', this._changed);
     if (!this._changed) {
       return;
     }
+    if (this._filePath === null) {
+      return;
+    }
+    fs.writeFileSync(this._filePath, JSON.stringify(this._data));
     this._changed = false;
+  }
+
+  public add(key: K, value: T): void {
+    console.log('-> Database.add()', key, value);
+    this._data[key] = value;
   }
 }

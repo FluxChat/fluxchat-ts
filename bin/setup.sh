@@ -60,6 +60,7 @@ fi
 if ! test -f ${FLUXCHAT_CONFIG}; then
 	echo '-> generating id'
 	export FLUXCHAT_ID=$(node build/src/utils/gen_id.js)
+	echo "-> FLUXCHAT_ID: ${FLUXCHAT_ID}"
 
 	echo '-> generating config'
 	touch ${FLUXCHAT_CONFIG}

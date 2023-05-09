@@ -1,16 +1,20 @@
 
 const minimist = require('minimist');
 import * as fs from 'fs';
+import { App } from '../lib/app';
 import { Config, Server } from '../lib/server';
 
-class ServerApp {
+class ServerApp extends App {
   private readonly _server: Server;
 
   constructor(
-    private readonly _args: any,
+    protected readonly _args: any,
   ) {
-    console.log('-> Server');
-    console.log(_args);
+    super(_args);
+
+    console.log('-> ServerApp');
+
+    process.on('SIGINT', this._onSigInt.bind(this));
 
     // Read the configuration file
     const config: Config = JSON.parse(fs.readFileSync(_args.config, 'utf8'));
@@ -20,9 +24,16 @@ class ServerApp {
   }
 
   public run(): void {
-    console.log('-> run()');
-
+    console.log('-> ServerApp.run()');
     this._server.start();
+    console.log('-> ServerApp.run() end');
+  }
+
+  private _onSigInt(): void {
+    console.log();
+    console.log('-> ServerApp._onSigInt()');
+    this._server.shutdown('SIGINT');
+    console.log('-> ServerApp._onSigInt() end');
   }
 }
 const options = {
@@ -30,6 +41,7 @@ const options = {
   alias: {
     config: ['c'],
   },
+  boolean: ['dev'],
   default: {
     config: 'var/config1.json',
   },

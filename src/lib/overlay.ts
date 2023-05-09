@@ -8,15 +8,15 @@ export class Node {
     this.id = id;
   }
 
-  valueOf(): string {
+  public valueOf(): string {
     return this.id;
   }
 
-  toString(): string {
+  public toString(): string {
     return `Node(${this.id})`;
   }
 
-  equals(other: Node | string): boolean {
+  public equals(other: Node | string): boolean {
     if (typeof other === 'string') {
       return this.id === other;
     }
@@ -28,11 +28,11 @@ export class Node {
     return false;
   }
 
-  decode(): Uint8Array {
+  public decode(): Uint8Array {
     return base58.decode(this.id.substring(3));
   }
 
-  isValid(): boolean {
+  public isValid(): boolean {
     if (!this.id.startsWith('FC_')) {
       return false;
     }
@@ -40,7 +40,7 @@ export class Node {
     return this.decode().length === 32;
   }
 
-  distance(other: Node): Distance {
+  public distance(other: Node): Distance {
     return new Distance(this, other);
   }
 
@@ -77,12 +77,12 @@ export class Distance {
     }
   }
 
-  toString(): string {
+  public toString(): string {
     // console.log('Distance.toString()');
     return `Distance(${this._distance})`;
   }
 
-  lessThan(other: Distance | number): boolean {
+  public lessThan(other: Distance | number): boolean {
     // console.log('Distance.lessThan()');
     if (typeof other === 'number') {
       return this._distance < other;
@@ -94,7 +94,7 @@ export class Distance {
     return false;
   }
 
-  equals(other: Distance | number): boolean {
+  public equals(other: Distance | number): boolean {
     // console.log('Distance.lessThan()', typeof other, other);
     if (typeof other === 'number') {
       return this._distance === other;

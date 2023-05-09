@@ -4,7 +4,7 @@
   "description": "A decentralized, peer-to-peer, encrypted chat written in TypeScript.",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon -x \"npm run build\"",
+    "dev": "tsc --watch --preserveWatchOutput",
     "build": "tsc --build --verbose",
     "start": "node build/src/app/Server.js",
     "test": "jest"
