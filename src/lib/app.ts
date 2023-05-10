@@ -1,6 +1,8 @@
 
 export abstract class App {
-  constructor(protected readonly _args: any) {
+  constructor(
+    protected readonly _args: any,
+  ) {
     console.log('-> App');
   }
 

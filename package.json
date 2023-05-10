@@ -17,14 +17,31 @@
   "bugs": {
     "url": "https://github.com/FluxChat/fluxchat-ts/issues"
   },
-  "keywords": ["decentralized", "peer-to-peer", "p2p", "chat", "mail", "messaging", "tcp", "tls", "asymmetric", "crypto", "cryptography", "encryption", "privacy", "anonymous", "typescript"],
+  "keywords": [
+    "decentralized",
+    "peer-to-peer",
+    "p2p",
+    "chat",
+    "mail",
+    "messaging",
+    "tcp",
+    "tls",
+    "asymmetric",
+    "crypto",
+    "cryptography",
+    "encryption",
+    "privacy",
+    "anonymous",
+    "typescript"
+  ],
   "author": "Christian Mayer <christian@fox21.at>",
   "license": "MIT",
   "dependencies": {
     "@types/bs58": "^4.0.1",
     "@types/minimist": "^1.2.2",
     "bs58": "^5.0.0",
-    "minimist": "^1.2.8"
+    "minimist": "^1.2.8",
+    "winston": "^3.8.2"
   },
   "devDependencies": {
     "@types/node": "^18.16.0",

@@ -1,10 +1,12 @@
 
 const minimist = require('minimist');
 import * as fs from 'fs';
+import * as winston from 'winston';
 import { App } from '../lib/app';
 import { Config, Server } from '../lib/server';
 
 class ServerApp extends App {
+  private readonly _logger: winston.Logger;
   private readonly _server: Server;
 
   constructor(
@@ -37,13 +39,15 @@ class ServerApp extends App {
   }
 }
 const options = {
-  string: ['config'],
+  string: ['config', 'loglevel'],
   alias: {
     config: ['c'],
+    loglevel: ['l'],
   },
   boolean: ['dev'],
   default: {
     config: 'var/config1.json',
+    loglevel: 'warn',
   },
 };
 const args = minimist(process.argv.slice(2), options);

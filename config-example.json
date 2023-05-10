@@ -23,5 +23,9 @@
 	"bootstrap": "default",
 	"mail": {
 		"retention_time": 24
+	},
+	"log": {
+		"level": "debug",
+		"file": "${FLUXCHAT_LOG_FILE}"
 	}
 }
