@@ -30,12 +30,27 @@ echo "-> FLUXCHAT_KEY_DERIVATION_ITERATIONS: ${FLUXCHAT_KEY_DERIVATION_ITERATION
 mkdir -p ${FLUXCHAT_DATA_DIR} tmp
 chmod go-rwx ${FLUXCHAT_DATA_DIR}
 
-echo '-> installing dependencies'
-npm ci
+echo '-> installing dependencies ...'
+if ! npm ci ; then
+	echo '-> installing dependencies failed, trying to rebuild'
+	rm -rf node_modules
+	if ! npm ci ; then
+		echo '-> installing dependencies failed'
+		node --version
+		npm --version
+		exit 1
+	fi
+fi
+echo '-> installing dependencies done'
 
+echo '-> building'
+if ! npm run build ; then
+	echo '-> building failed (A)'
+	exit 1
+fi
 if [[ ! -d build ]]; then
-	echo '-> building'
-	npm run build
+	echo '-> building failed (B)'
+	exit 1
 fi
 
 export FLUXCHAT_KEY_DERIVATION=$(node build/src/utils/pkd.js)
