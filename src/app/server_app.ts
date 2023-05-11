@@ -22,6 +22,23 @@ class ServerApp extends App {
     const config: Config = JSON.parse(fs.readFileSync(_args.config, 'utf8'));
     console.log(config);
 
+    let transports: winston.transport[] = [];
+    if (_args.dev) {
+    }
+    transports.push(new winston.transports.Console());
+    transports.push(new winston.transports.File({ filename: 'logfile.log' }));
+    winston.configure({
+      level: 'debug',
+      format: winston.format.json(),
+      transports: transports,
+    });
+
+    const logger = winston.loggers.get('default');
+
+    logger.error('Ein Fehler ist aufgetreten');
+    logger.warn('Warnung: Diese Funktion ist veraltet');
+    logger.info('Eine Info-Nachricht');
+
     this._server = new Server(config);
   }
 
