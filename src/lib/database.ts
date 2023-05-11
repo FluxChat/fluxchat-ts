@@ -1,16 +1,23 @@
 
 import * as fs from 'fs';
+import * as winston from 'winston';
+import { LoggerFactory } from './logger';
 
 type KeyType = string | number;
 export type DataType<K extends KeyType, T> = { [key in K]: T };
 
 export abstract class Database<K extends KeyType, T extends object> {
+  protected abstract readonly _logger: winston.Logger;
   protected readonly _filePath: string | null = null;
   protected abstract _data: DataType<K, T>;
   protected _changed: boolean = false;
 
+  // constructor() {
+  //   this._logger = LoggerFactory.getInstance().createLogger('database');
+  // }
+
   public load(defaultData: DataType<K, T> = {} as DataType<K, T>): void {
-    console.log('-> Database.load()');
+    this._logger.debug('load()');
 
     if (this._filePath === null) {
       this._data = defaultData;
@@ -27,7 +34,7 @@ export abstract class Database<K extends KeyType, T extends object> {
   }
 
   public save(): void {
-    console.log('-> Database.save()', this._changed);
+    this._logger.debug('save()', this._changed);
     if (!this._changed) {
       return;
     }
@@ -39,7 +46,7 @@ export abstract class Database<K extends KeyType, T extends object> {
   }
 
   public add(key: K, value: T): void {
-    console.log('-> Database.add()', key, value);
+    this._logger.debug('add()', key, value);
     this._data[key] = value;
   }
 }

@@ -3,21 +3,17 @@ import * as crypto from 'crypto';
 import * as tls from 'tls';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as winston from 'winston';
 import { passwordKeyDerivation } from './helpers';
+import { LoggerFactory } from './logger';
+import { Config } from './config';
 import { Network } from './network';
 import { AddressBook } from './address_book';
 import { Client } from './client';
 
-export interface Config {
-  readonly address: string;
-  readonly port: number;
-  readonly contact: string;
-  readonly id: string;
-  readonly data_dir: string;
-};
-
 export class Server extends Network {
   private _shutdown: boolean = false;
+  private readonly _logger: winston.Logger;
   private readonly _privateKeyDerivation: string;
   private readonly _privateKeyFilePath: string;
   private readonly _privateKey: crypto.KeyObject;
@@ -34,11 +30,13 @@ export class Server extends Network {
     private readonly _config: Config,
   ) {
     super();
-    console.log('-> Server');
+    // console.log('-> Server');
 
-    console.log('-> password key derivation start');
+    this._logger = LoggerFactory.getInstance().createLogger('server_app');
+
+    // console.log('-> password key derivation start');
     this._privateKeyDerivation = passwordKeyDerivation(process.env.FLUXCHAT_KEY_PASSWORD || 'password');
-    console.log('-> password key derivation done');
+    // console.log('-> password key derivation done');
 
     this._privateKeyFilePath = path.join(this._config.data_dir, 'private_key.pem');
     this._privateKey = crypto.createPrivateKey({
@@ -55,7 +53,7 @@ export class Server extends Network {
   }
 
   public start(): void {
-    console.log('-> Server.start()');
+    // console.log('-> Server.start()');
 
     // Address Book
     this._addressbook = new AddressBook(this._addressbookFilePath);
@@ -77,7 +75,7 @@ export class Server extends Network {
   }
 
   public shutdown(reason: string): void {
-    console.log('-> Server.shutdown()', reason);
+    // console.log('-> Server.shutdown()', reason);
     this._shutdown = true;
 
     if (this._main_server) {
@@ -86,18 +84,18 @@ export class Server extends Network {
   }
 
   private _onCreated(): void {
-    console.log('-> Server._onCreated()');
+    // console.log('-> Server._onCreated()');
   }
 
   private _onConnection(socket: tls.TLSSocket): void {
-    console.log('-> Server._onConnection()');
-    console.log('-> socket', socket);
-    console.log('-> socket.remoteAddress', socket.remoteAddress);
-    console.log('-> socket.remotePort', socket.remotePort);
-    console.log('-> socket.authorized', socket.authorized);
-    console.log('-> socket.authorizationError', socket.authorizationError);
-    console.log('-> socket.encrypted', socket.encrypted);
-    console.log('-> socket.getCipher()', socket.getCipher());
+    // console.log('-> Server._onConnection()');
+    // console.log('-> socket', socket);
+    // console.log('-> socket.remoteAddress', socket.remoteAddress);
+    // console.log('-> socket.remotePort', socket.remotePort);
+    // console.log('-> socket.authorized', socket.authorized);
+    // console.log('-> socket.authorizationError', socket.authorizationError);
+    // console.log('-> socket.encrypted', socket.encrypted);
+    // console.log('-> socket.getCipher()', socket.getCipher());
 
     const client = new Client(socket);
     this._clients.push(client);
@@ -108,7 +106,7 @@ export class Server extends Network {
   }
 
   private _onData(data: Buffer): void {
-    console.log('-> Server._onData()');
-    console.log('-> data', data);
+    // console.log('-> Server._onData()');
+    // console.log('-> data', data);
   }
 }
