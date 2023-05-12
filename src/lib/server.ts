@@ -72,7 +72,7 @@ export class Server extends Network {
       }],
       cert: fs.readFileSync(this._certificateFilePath),
     };
-    this._main_server = tls.createServer(options, this._onConnection);
+    this._main_server = tls.createServer(options, this._onConnection.bind(this));
 
     this._main_server.listen(this._config.port, this._config.address, this._onCreated.bind(this));
     this._main_server.on('error', this._onError.bind(this));
@@ -94,6 +94,7 @@ export class Server extends Network {
 
   private _onConnection(socket: tls.TLSSocket): void {
     this._logger.info('_onConnection()');
+    this._logger.debug(typeof socket);
     this._logger.debug('socket', socket);
     this._logger.debug('socket.remoteAddress', socket.remoteAddress);
     this._logger.debug('socket.remotePort', socket.remotePort);
