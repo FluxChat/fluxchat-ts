@@ -32,34 +32,39 @@ export class Server extends Network {
     super();
     // console.log('-> Server');
 
-    this._logger = LoggerFactory.getInstance().createLogger('server_app');
+    this._logger = LoggerFactory.getInstance().createLogger('server');
 
-    // console.log('-> password key derivation start');
+    this._logger.debug('password key derivation start');
     this._privateKeyDerivation = passwordKeyDerivation(process.env.FLUXCHAT_KEY_PASSWORD || 'password');
-    // console.log('-> password key derivation done');
+    this._logger.debug('password key derivation done');
 
     this._privateKeyFilePath = path.join(this._config.data_dir, 'private_key.pem');
+    this._logger.debug('private key file path', this._privateKeyFilePath);
     this._privateKey = crypto.createPrivateKey({
       key: fs.readFileSync(this._privateKeyFilePath),
       passphrase: this._privateKeyDerivation,
     });
 
     this._publicKeyFilePath = path.join(this._config.data_dir, 'public_key.pem');
+    this._logger.debug('public key file path', this._publicKeyFilePath);
     this._publicKey = crypto.createPublicKey(fs.readFileSync(this._publicKeyFilePath));
 
     this._certificateFilePath = path.join(this._config.data_dir, 'certificate.pem');
+    this._logger.debug('certificate file path', this._certificateFilePath);
 
     this._addressbookFilePath = path.join(this._config.data_dir, 'address_book.json');
+    this._logger.debug('address book file path', this._addressbookFilePath);
   }
 
   public start(): void {
-    // console.log('-> Server.start()');
+    this._logger.info('start()');
 
     // Address Book
     this._addressbook = new AddressBook(this._addressbookFilePath);
     this._addressbook.load();
 
     // Main TLS Server
+    this._logger.info('start TLS server');
     const options = {
       key: [{
         pem: fs.readFileSync(this._privateKeyFilePath),
@@ -69,13 +74,13 @@ export class Server extends Network {
     };
     this._main_server = tls.createServer(options, this._onConnection);
 
-    this._main_server.listen(this._config.port, this._config.address, this._onCreated);
-    this._main_server.on('error', this._onError);
-    this._main_server.on('data', this._onData);
+    this._main_server.listen(this._config.port, this._config.address, this._onCreated.bind(this));
+    this._main_server.on('error', this._onError.bind(this));
+    this._main_server.on('data', this._onData.bind(this));
   }
 
   public shutdown(reason: string): void {
-    // console.log('-> Server.shutdown()', reason);
+    this._logger.info('shutdown()', reason);
     this._shutdown = true;
 
     if (this._main_server) {
@@ -84,29 +89,28 @@ export class Server extends Network {
   }
 
   private _onCreated(): void {
-    // console.log('-> Server._onCreated()');
+    this._logger.debug('_onCreated()');
   }
 
   private _onConnection(socket: tls.TLSSocket): void {
-    // console.log('-> Server._onConnection()');
-    // console.log('-> socket', socket);
-    // console.log('-> socket.remoteAddress', socket.remoteAddress);
-    // console.log('-> socket.remotePort', socket.remotePort);
-    // console.log('-> socket.authorized', socket.authorized);
-    // console.log('-> socket.authorizationError', socket.authorizationError);
-    // console.log('-> socket.encrypted', socket.encrypted);
-    // console.log('-> socket.getCipher()', socket.getCipher());
+    this._logger.info('_onConnection()');
+    this._logger.debug('socket', socket);
+    this._logger.debug('socket.remoteAddress', socket.remoteAddress);
+    this._logger.debug('socket.remotePort', socket.remotePort);
+    this._logger.debug('socket.authorized', socket.authorized);
+    this._logger.debug('socket.authorizationError', socket.authorizationError);
+    this._logger.debug('socket.encrypted', socket.encrypted);
+    this._logger.debug('socket.getCipher()', socket.getCipher());
 
     const client = new Client(socket);
     this._clients.push(client);
   }
 
   private _onError(error: Error): void {
-    console.error(error);
+    this._logger.error('_onError', error);
   }
 
   private _onData(data: Buffer): void {
-    // console.log('-> Server._onData()');
-    // console.log('-> data', data);
+    this._logger.debug('_onData()');
   }
 }

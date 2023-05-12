@@ -11,16 +11,14 @@ export class LoggerFactory {
   private static instance: LoggerFactory;
 
   public static init(config: Config, addlogLevel: LogLevel = undefined): void {
-    console.log('-> LoggerFactory.init()');
-
     let logFile: string = config.log.file;
     if (!logFile.startsWith('/') && !logFile.includes('/')) {
       logFile = path.join(config.data_dir, logFile);
     }
-    console.log('logFile', logFile);
+    // console.log('logFile', logFile);
 
     let effectiveLogLevel: LogLevel = addlogLevel === undefined ? config.log.level : addlogLevel;
-    console.log('effectiveLogLevel', effectiveLogLevel);
+    // console.log('effectiveLogLevel', effectiveLogLevel);
 
     const format = winston.format.combine(
       winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ssZ' }),

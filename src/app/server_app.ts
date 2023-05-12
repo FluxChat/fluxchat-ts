@@ -17,39 +17,27 @@ class ServerApp extends App {
   ) {
     super(_args);
 
-    console.log('-> ServerApp');
-    // console.log(_args);
-
     process.on('SIGINT', this._shutdown.bind(this));
     process.on('SIGTERM', this._shutdown.bind(this));
 
     // Read the configuration file
     const config: Config = JSON.parse(fs.readFileSync(_args.config, 'utf8'));
-    console.log(config);
 
     LoggerFactory.init(config, _args.loglevel);
     this._logger = LoggerFactory.getInstance().createLogger('server_app');
-
-    this._logger.error('My error message');
-    this._logger.warn('My warning message');
-    this._logger.info('My info message');
-
-    // console.log(config);
+    this._logger.info('ServerApp()');
 
     this._server = new Server(config);
   }
 
   public run(): void {
-    // console.log('-> ServerApp.run()');
+    this._logger.info('run()');
     this._server.start();
-    // console.log('-> ServerApp.run() end');
   }
 
   private _shutdown(): void {
-    // console.log();
-    // console.log('-> ServerApp._shutdown()');
+    this._logger.info('_shutdown()')
     this._server.shutdown('SIGINT');
-    // console.log('-> ServerApp._shutdown() end');
   }
 }
 const options = {
