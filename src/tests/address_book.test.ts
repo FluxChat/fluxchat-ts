@@ -32,4 +32,9 @@ describe('AddressBook', () => {
       expect(client1b.toString()).toEqual('Client(uuid1)');
     }
   });
+
+  test('bootstrap', async () => {
+    const ad1 = new AddressBook('tmp/tests/address_book.json');
+    await ad1.loadBootstrap('tmp/tests/bootstrap.json');
+  });
 });

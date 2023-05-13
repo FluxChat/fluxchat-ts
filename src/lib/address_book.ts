@@ -5,6 +5,7 @@ import { format as f } from 'util';
 import { LoggerFactory } from './logger';
 import { Client } from './client';
 import { Database } from './database';
+import { Contact } from './contact';
 
 export class AddressBook extends Database<string, Client> {
   private readonly _logger: winston.Logger;
@@ -17,13 +18,24 @@ export class AddressBook extends Database<string, Client> {
     this._logger.debug(f('constructor(%s)', this._filePath));
   }
 
-  public loadBootstrap(path: string): void {
+  public async loadBootstrap(path: string): Promise<void> {
     this._logger.debug(f('loadBootstrap(%s)', path));
 
     if (!fs.existsSync(path)) {
       return;
     }
-    const data = JSON.parse(fs.readFileSync(path, 'utf8'));
+    const data: Array<string> = JSON.parse(fs.readFileSync(path, 'utf8')) as Array<string>;
+    console.log('loadBootstrap', data);
+
+    for (const _contact of data) {
+      const contact = await Contact.resolve(_contact);
+      console.log('loadBootstrap', contact);
+    }
+
+    // data.forEach(async (_contact) => {
+    //   const contact = await Contact.resolve(_contact);
+    //   console.log('loadBootstrap', contact);
+    // });
   }
 
   public addClient(client: Client): void {
