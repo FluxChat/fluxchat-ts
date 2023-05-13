@@ -16,14 +16,10 @@ export abstract class Database<K extends KeyType, T extends Serializable> {
   protected _data: Map<K, T>;
   protected _changed: boolean = false;
   protected abstract readonly _typex: new () => T;
-  // protected abstract _typey: typeof T;
-  // protected _typey: new () => T;
 
   constructor(protected readonly _filePath: string) {
     this._plogger = LoggerFactory.getInstance().createLogger('address_book');
     this._data = new Map<K, T>();
-    // this._typex = function(this: T) {} as any as new () => T;
-    // console.log('constructor', this._typex);
   }
 
   public load(defaultData: Map<K, T> = {} as Map<K, T>): void {
@@ -34,33 +30,16 @@ export abstract class Database<K extends KeyType, T extends Serializable> {
       const entries = Object.entries(jsonObject);
 
       entries.forEach(([key, value]) => {
-        console.log('load A', key, value);
-        // const obj = T.prototype.fromJSON(value, key);
-        // .fromJSON(value, key);
+        // console.log('load A', key, value);
 
-        // value is from Serializable, so use fromJSON() to create the object
-        // and then set it in the map
-
-        // const _x: new () => T = T;
-
-        // const obj: T = new (value as T);
         const obj: T = new this._typex();
         obj.fromJSON(value as object, key);
-        console.log('load Ba', obj.toString());
-        console.log('load Bb', typeof obj);
+        // console.log('load Ba', obj.toString());
+        // console.log('load Bb', typeof obj);
         this._data.set(key as K, obj);
-
-        // const obj2: T = value as T;
-        // console.log('load Ca', obj2.toString());
-        // console.log('load Cb', typeof obj2);
-        // this._data.set(key as K, obj2);
-
-        // const _o = {} as T;
-        // const _obj = _o.fromJSON(value as object, key);
-        console.log('load Z', this._data.get(key as K));
+        // console.log('load Z', this._data.get(key as K));
       });
 
-      // this._data = JSON.parse(fs.readFileSync(this._filePath, 'utf8'));
       this._plogger.debug(f('load() - %s', this._data));
       this._changed = false;
     } else {
@@ -77,14 +56,11 @@ export abstract class Database<K extends KeyType, T extends Serializable> {
 
     const _map = new Map<K, object>();
     for (const [_key, _val] of this._data.entries()) {
-      // console.log(_key);
       _map.set(_key, _val.toJSON());
     }
 
     const entries = Array.from(_map.entries());
-    // console.log('entries', entries);
     const obj = Object.fromEntries(entries);
-    // console.log('obj', obj);
 
     fs.writeFileSync(this._filePath, JSON.stringify(obj, null, 4));
 

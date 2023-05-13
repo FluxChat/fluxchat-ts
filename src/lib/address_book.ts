@@ -1,8 +1,7 @@
 
 import * as fs from 'fs';
-import * as util from 'util';
-import { format as f } from 'util';
 import * as winston from 'winston';
+import { format as f } from 'util';
 import { LoggerFactory } from './logger';
 import { Client } from './client';
 import { Database } from './database';
@@ -15,11 +14,11 @@ export class AddressBook extends Database<string, Client> {
     super(_filePath);
 
     this._logger = LoggerFactory.getInstance().createLogger('address_book');
-    this._logger.debug(util.format('constructor(%s)', this._filePath));
+    this._logger.debug(f('constructor(%s)', this._filePath));
   }
 
   public loadBootstrap(path: string): void {
-    this._logger.debug(util.format('loadBootstrap(%s)', path));
+    this._logger.debug(f('loadBootstrap(%s)', path));
 
     if (!fs.existsSync(path)) {
       return;
@@ -28,7 +27,7 @@ export class AddressBook extends Database<string, Client> {
   }
 
   public addClient(client: Client): void {
-    this._logger.debug(util.format('addClient(%s)', client));
+    this._logger.debug(f('addClient(%s)', client));
 
     this.add(client.uuid, client);
   }
