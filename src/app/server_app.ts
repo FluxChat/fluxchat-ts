@@ -11,6 +11,7 @@ import path from 'path';
 class ServerApp extends App {
   private readonly _logger: winston.Logger;
   private readonly _server: Server;
+  private readonly _pidFile: string;
 
   constructor(
     protected readonly _args: any,
@@ -22,6 +23,10 @@ class ServerApp extends App {
 
     // Read the configuration file
     const config: Config = JSON.parse(fs.readFileSync(_args.config, 'utf8'));
+
+    // PID file
+    this._pidFile = path.join(config.data_dir, 'server.pid');
+    fs.writeFileSync(this._pidFile, process.pid.toString());
 
     LoggerFactory.init(config, _args.loglevel);
     this._logger = LoggerFactory.getInstance().createLogger('server_app');
@@ -37,7 +42,18 @@ class ServerApp extends App {
 
   private _shutdown(): void {
     this._logger.info('_shutdown()')
+
     this._server.shutdown('SIGINT');
+    this._cleanup();
+  }
+
+  private _cleanup(): void {
+    this._logger.info('_cleanup()');
+
+    process.removeAllListeners('SIGINT');
+    process.removeAllListeners('SIGTERM');
+
+    fs.unlinkSync(this._pidFile);
   }
 }
 const options = {

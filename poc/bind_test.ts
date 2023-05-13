@@ -6,8 +6,8 @@ class Foo {
     this.name = name;
   }
 
-  greet() {
-    console.log(`Hello, Foo ${this.name}!`);
+  greet(x: string) {
+    console.log(`Hello, Foo ${this.name}! ${x}`);
   }
 }
 
@@ -24,7 +24,7 @@ class Bar {
 }
 
 const o1 = new Foo('A');
-const greetFunc1 = o1.greet.bind(o1);
+const greetFunc1 = o1.greet.bind(o1, 'B');
 greetFunc1();
 
 const o2 = new Bar('B');
