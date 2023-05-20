@@ -36,5 +36,6 @@ describe('AddressBook', () => {
   test('bootstrap', async () => {
     const ad1 = new AddressBook('tmp/tests/address_book.json');
     await ad1.loadBootstrap('tmp/tests/bootstrap.json');
+    expect(ad1.getAll().size).toEqual(2);
   });
 });

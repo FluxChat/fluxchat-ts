@@ -30,12 +30,17 @@ export class AddressBook extends Database<string, Client> {
     for (const _contact of data) {
       const contact = await Contact.resolve(_contact);
       console.log('loadBootstrap', contact);
+      if (contact.is_valid) {
+        const client = new Client();
+        if (contact.addr) {
+          client.address = contact.addr;
+        }
+        if (contact.port) {
+          client.port = contact.port;
+        }
+        this.addClient(client);
+      }
     }
-
-    // data.forEach(async (_contact) => {
-    //   const contact = await Contact.resolve(_contact);
-    //   console.log('loadBootstrap', contact);
-    // });
   }
 
   public addClient(client: Client): void {
