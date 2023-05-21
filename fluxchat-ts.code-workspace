@@ -19,6 +19,47 @@
                     "reveal": "always"
                 },
                 "group": "build"
+            }, {
+                "label": "Tests",
+                "command": "./bin/tests.sh",
+                "type": "shell",
+                "args": [],
+                "presentation": {
+                    "reveal": "always"
+                },
+                "group": "test"
+            }
+        ]
+    },
+    "launch": {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "type": "node",
+                "request": "launch",
+                "name": "Launch Program",
+                "skipFiles": [
+                    "<node_internals>/**"
+                ],
+                "sourceMaps": true,
+                "program": "${file}",
+                "preLaunchTask": "Build",
+                "outFiles": [
+                    "${workspaceFolder}/build/**/*.js"
+                ]
+            }, {
+                "type": "node",
+                "request": "launch",
+                "name": "Server",
+                "skipFiles": [
+                    "<node_internals>/**"
+                ],
+                "sourceMaps": true,
+                "program": "./build/src/app/server_app.js",
+                "preLaunchTask": "Build",
+                "outFiles": [
+                    "${workspaceFolder}/build/**/*.js"
+                ]
             }
         ]
     }
