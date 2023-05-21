@@ -8,7 +8,7 @@ import { format as f } from 'util';
 import { passwordKeyDerivation } from './helpers';
 import { LoggerFactory } from './logger';
 import { Config } from './config';
-import { Network } from './network';
+import { Command, Network } from './network';
 import { AddressBook } from './address_book';
 import { Client } from './client';
 
@@ -137,7 +137,7 @@ export class Server extends Network {
 
     let client = new Client();
     client.socket = socket;
-    client.socket.on('data', this._onClientData.bind(this));
+    client.socket.on('data', this._onClientData.bind(this, client));
     client.socket.on('end', this._onClientEnd.bind(this, client));
     client.socket.on('close', this._onClientClose.bind(this));
     client.socket.on('error', this._onClientError.bind(this));
@@ -162,12 +162,19 @@ export class Server extends Network {
     this._logger.debug(f('_onClientConnect(%s)', client.uuid));
   }
 
-  private _onClientData(data: Buffer): void {
-    this._logger.debug(f('_onClientData(%s)', data.toString()));
+  private _onClientData(client: Client, data: Buffer): void {
+    this._logger.debug(f('_onClientData(%s)', client));
+    this._logger.debug(f('data: %s', data));
+    const commands: Array<Command> = this._clientReadRaw(data);
+    for (let command of commands) {
+      this._logger.debug(f('command: %s', command));
+      this._clientHandleCommand(client, command);
+    }
   }
 
   private _onClientEnd(client: Client): void {
     this._logger.debug(f('_onClientEnd(%s)', client.uuid));
+    this._clients.delete(client.uuid);
   }
 
   private _onClientClose(hadError: boolean): void {
@@ -200,7 +207,6 @@ export class Server extends Network {
       if (!client.socket) {
         this._logger.debug(f('client %s %s socket is null', key, client.uuid));
         this._clientConnect(client);
-        // client.socket.write('contact_address_book\n');
       }
     });
   }
@@ -213,10 +219,17 @@ export class Server extends Network {
       rejectUnauthorized: false,
     };
     client.socket = tls.connect(options, this._onClientConnect.bind(this, client));
-    // client.socket.on('data', this._onClientData.bind(this));
-    // client.socket.on('end', this._onClientEnd.bind(this, client));
-    // client.socket.on('close', this._onClientClose.bind(this));
-    // client.socket.on('error', this._onClientError.bind(this));
-    // client.socket.on('timeout', this._onClientTimeout.bind(this));
+
+    client.socket.on('data', this._onClientData.bind(this, client));
+    client.socket.on('end', this._onClientEnd.bind(this, client));
+    client.socket.on('close', this._onClientClose.bind(this));
+    client.socket.on('error', this._onClientError.bind(this));
+    client.socket.on('timeout', this._onClientTimeout.bind(this));
+
+    this._clients.set(client.uuid, client);
+  }
+
+  private _clientHandleCommand(client: Client, command: Command): void {
+    // TODO
   }
 }
