@@ -22,8 +22,9 @@ export class Server extends Network {
   private readonly _publicKey: crypto.KeyObject;
   private readonly _certificateFilePath: string;
   private readonly _addressbookFilePath: string;
+  private readonly _addressbookBootstrapFilePath: string;
 
-  private _addressbook: AddressBook | null = null;
+  private _addressbook: AddressBook;
   private _main_server: tls.Server | null = null;
   private _clients: Map<string, Client> = new Map<string, Client>();
   private _tasks: Map<string, NodeJS.Timeout> = new Map<string, NodeJS.Timeout>();
@@ -55,6 +56,8 @@ export class Server extends Network {
 
     this._addressbookFilePath = path.join(this._config.data_dir, 'address_book.json');
     this._logger.debug('address book file path', this._addressbookFilePath);
+    this._addressbookBootstrapFilePath = path.join(this._config.data_dir, 'bootstrap.json');
+    this._addressbook = new AddressBook(this._addressbookFilePath);
   }
 
   public start(): void {
@@ -66,8 +69,8 @@ export class Server extends Network {
     this._tasks.set('contact_address_book', setTimeout(this._contactAddressBook.bind(this), 10000));
 
     // Address Book
-    this._addressbook = new AddressBook(this._addressbookFilePath);
     this._addressbook.load();
+    this._addressbook.loadBootstrap(path.join(this._config.data_dir, 'bootstrap.json'));
 
     // Main TLS Server
     this._logger.info('start TLS server');
@@ -148,10 +151,15 @@ export class Server extends Network {
 
   private _onMainServerError(error: Error): void {
     this._logger.error(f('_onMainServerError() %s', error.message));
+    this.shutdown(error.message);
   }
 
   private _onMainServerDrop(socket: any): void {
     this._logger.debug(f('_onMainServerDrop(%s) %s:%d', typeof socket, socket.remoteAddress, socket.remotePort));
+  }
+
+  private _onClientConnect(client: Client): void {
+    this._logger.debug(f('_onClientConnect(%s)', client.uuid));
   }
 
   private _onClientData(data: Buffer): void {
@@ -175,7 +183,7 @@ export class Server extends Network {
   }
 
   private _debugClients(): void {
-    this._logger.info('_debugClients()');
+    this._logger.info(f('_debugClients() -> %d', this._clients.size));
     for (let [c_uuid, client] of this._clients) {
       this._logger.debug(f('client %s %s', c_uuid, client.uuid));
     }
@@ -183,10 +191,6 @@ export class Server extends Network {
 
   private _contactAddressBook(): void {
     this._logger.info('_contactAddressBook()');
-
-    if (!this._addressbook) {
-      return;
-    }
 
     this._logger.info('getAll()');
     const _entries = this._addressbook.getAll();
@@ -203,12 +207,12 @@ export class Server extends Network {
 
   private _clientConnect(client: Client): void {
     this._logger.info('_clientConnect()');
-    // const options = {
-    //   host: client.host,
-    //   port: client.port,
-    //   rejectUnauthorized: false,
-    // };
-    // client.socket = tls.connect(options, this._onClientConnect.bind(this, client));
+    const options = {
+      host: client.address,
+      port: client.port,
+      rejectUnauthorized: false,
+    };
+    client.socket = tls.connect(options, this._onClientConnect.bind(this, client));
     // client.socket.on('data', this._onClientData.bind(this));
     // client.socket.on('end', this._onClientEnd.bind(this, client));
     // client.socket.on('close', this._onClientClose.bind(this));

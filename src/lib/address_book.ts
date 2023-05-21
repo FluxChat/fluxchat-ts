@@ -25,11 +25,10 @@ export class AddressBook extends Database<string, Client> {
       return;
     }
     const data: Array<string> = JSON.parse(fs.readFileSync(path, 'utf8')) as Array<string>;
-    console.log('loadBootstrap', data);
+    // console.log('loadBootstrap', data);
 
     for (const _contact of data) {
       const contact = await Contact.resolve(_contact);
-      console.log('loadBootstrap', contact);
       if (contact.is_valid) {
         const client = new Client();
         if (contact.addr) {
@@ -41,6 +40,8 @@ export class AddressBook extends Database<string, Client> {
         this.addClient(client);
       }
     }
+
+    fs.writeFileSync(path, '[]', 'utf8');
   }
 
   public addClient(client: Client): void {

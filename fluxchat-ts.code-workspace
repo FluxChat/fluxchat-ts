@@ -16,7 +16,7 @@
                     "$tsc"
                 ],
                 "presentation": {
-                    "reveal": "always"
+                    "reveal": "silent"
                 },
                 "group": "build"
             }, {
@@ -64,6 +64,22 @@
                 ],
                 "console": "internalConsole",
                 "outputCapture": "std"
+            }, {
+                "type": "node",
+                "request": "attach",
+                "name": "Attach",
+                "skipFiles": [
+                    "<node_internals>/**"
+                ],
+                "address": "localhost",
+                "port": 9229,
+                "sourceMaps": true,
+                "outFiles": [
+                    "${workspaceFolder}/build/**/*.js"
+                ],
+                "localRoot": "${workspaceFolder}",
+                "remoteRoot": "${workspaceFolder}",
+                "trace": true
             }
         ]
     }
