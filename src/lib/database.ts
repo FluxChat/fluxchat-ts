@@ -22,7 +22,7 @@ export abstract class Database<K extends KeyType, T extends Serializable> {
     this._data = new Map<K, T>();
   }
 
-  public load(defaultData: Map<K, T> = {} as Map<K, T>): void {
+  public load(defaultData: Map<K, T> = new Map<K, T>()): void {
     this._plogger.debug('load()');
 
     if (fs.existsSync(this._filePath)) {

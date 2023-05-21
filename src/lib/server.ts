@@ -188,15 +188,31 @@ export class Server extends Network {
       return;
     }
 
+    this._logger.info('getAll()');
     const _entries = this._addressbook.getAll();
-    this._logger.info(f('address book has %d entries', _entries.size));
-    this._logger.info(f('_entries: %s', typeof _entries));
-    this._logger.info(f('getAll: %s', typeof this._addressbook.getAll));
-
-    for (let [c_uuid, client] of _entries) {
-      if (client.socket) {
-        client.socket.write('contact_address_book\n');
+    this._logger.debug(f('entries %s', _entries.size));
+    this._addressbook.getAll().forEach((client: Client, key: string) => {
+      this._logger.debug(f('client %s %s', key, client.uuid));
+      if (!client.socket) {
+        this._logger.debug(f('client %s %s socket is null', key, client.uuid));
+        this._clientConnect(client);
+        // client.socket.write('contact_address_book\n');
       }
-    }
+    });
+  }
+
+  private _clientConnect(client: Client): void {
+    this._logger.info('_clientConnect()');
+    // const options = {
+    //   host: client.host,
+    //   port: client.port,
+    //   rejectUnauthorized: false,
+    // };
+    // client.socket = tls.connect(options, this._onClientConnect.bind(this, client));
+    // client.socket.on('data', this._onClientData.bind(this));
+    // client.socket.on('end', this._onClientEnd.bind(this, client));
+    // client.socket.on('close', this._onClientClose.bind(this));
+    // client.socket.on('error', this._onClientError.bind(this));
+    // client.socket.on('timeout', this._onClientTimeout.bind(this));
   }
 }

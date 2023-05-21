@@ -46,7 +46,9 @@
                 "preLaunchTask": "Build",
                 "outFiles": [
                     "${workspaceFolder}/build/**/*.js"
-                ]
+                ],
+                "console": "internalConsole",
+                "outputCapture": "std"
             }, {
                 "type": "node",
                 "request": "launch",
@@ -59,7 +61,9 @@
                 "preLaunchTask": "Build",
                 "outFiles": [
                     "${workspaceFolder}/build/**/*.js"
-                ]
+                ],
+                "console": "internalConsole",
+                "outputCapture": "std"
             }
         ]
     }
