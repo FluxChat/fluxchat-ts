@@ -7,8 +7,6 @@ cd "${SCRIPT_BASEDIR}/.."
 rm -rf tmp/tests
 mkdir -p tmp/tests
 
-echo -n '["tests.fluxchat.dev:25001", "tests.fluxchat.dev:25002"]' > tmp/tests/bootstrap.json
-
 set -e
 npm run build
 npm run test
