@@ -3,6 +3,7 @@ export interface ConfigLog {
   readonly level: string;
   readonly file: string;
 }
+
 export interface Config {
   readonly address: string;
   readonly port: number;

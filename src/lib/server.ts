@@ -15,11 +15,11 @@ import { Client } from './client';
 export class Server extends Network {
   private _shutdown: boolean = false;
   private readonly _logger: winston.Logger;
-  private readonly _privateKeyDerivation: string;
+  private _privateKeyDerivation: string | null = null;
   private readonly _privateKeyFilePath: string;
-  private readonly _privateKey: crypto.KeyObject;
+  // private readonly _privateKey: crypto.KeyObject;
   private readonly _publicKeyFilePath: string;
-  private readonly _publicKey: crypto.KeyObject;
+  // private readonly _publicKey: crypto.KeyObject;
   private readonly _certificateFilePath: string;
   private readonly _addressbookFilePath: string;
   private readonly _addressbookBootstrapFilePath: string;
@@ -36,20 +36,8 @@ export class Server extends Network {
 
     this._logger = LoggerFactory.getInstance().createLogger('server');
 
-    this._logger.debug('password key derivation start');
-    this._privateKeyDerivation = passwordKeyDerivation(process.env.FLUXCHAT_KEY_PASSWORD || 'password');
-    this._logger.debug('password key derivation done');
-
     this._privateKeyFilePath = path.join(this._config.data_dir, 'private_key.pem');
-    this._logger.debug('private key file path', this._privateKeyFilePath);
-    this._privateKey = crypto.createPrivateKey({
-      key: fs.readFileSync(this._privateKeyFilePath),
-      passphrase: this._privateKeyDerivation,
-    });
-
     this._publicKeyFilePath = path.join(this._config.data_dir, 'public_key.pem');
-    this._logger.debug('public key file path', this._publicKeyFilePath);
-    this._publicKey = crypto.createPublicKey(fs.readFileSync(this._publicKeyFilePath));
 
     this._certificateFilePath = path.join(this._config.data_dir, 'certificate.pem');
     this._logger.debug('certificate file path', this._certificateFilePath);
@@ -63,6 +51,19 @@ export class Server extends Network {
   public start(): void {
     this._logger.info('start()');
 
+    this._logger.debug('password key derivation start');
+    this._privateKeyDerivation = passwordKeyDerivation(process.env.FLUXCHAT_KEY_PASSWORD || 'password');
+    this._logger.debug('password key derivation done');
+
+    // this._logger.debug('public key file path', this._publicKeyFilePath);
+    // this._publicKey = crypto.createPublicKey(fs.readFileSync(this._publicKeyFilePath));
+
+    // this._logger.debug('private key file path', this._privateKeyFilePath);
+    // this._privateKey = crypto.createPrivateKey({
+    //   key: fs.readFileSync(this._privateKeyFilePath),
+    //   passphrase: this._privateKeyDerivation,
+    // });
+
     // Tasks
     this._tasks.set('debug_clients', setInterval(this._debugClients.bind(this), 10000));
     this._tasks.set('save', setInterval(this.save.bind(this), 60000));
@@ -70,7 +71,7 @@ export class Server extends Network {
 
     // Address Book
     this._addressbook.load();
-    this._addressbook.loadBootstrap(path.join(this._config.data_dir, 'bootstrap.json'));
+    this._addressbook.loadBootstrap(this._addressbookBootstrapFilePath);
 
     // Main TLS Server
     this._logger.info('start TLS server');
@@ -229,7 +230,8 @@ export class Server extends Network {
     this._clients.set(client.uuid, client);
   }
 
-  private _clientHandleCommand(client: Client, command: Command): void {
+  protected _clientHandleCommand(client: Client, command: Command): void {
     // TODO
+    this._logger.debug(f('_clientHandleCommand(%s, %s)', client.uuid, command));
   }
 }
