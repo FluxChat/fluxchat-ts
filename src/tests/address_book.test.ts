@@ -35,7 +35,7 @@ describe('AddressBook', () => {
 
   test('bootstrap', async () => {
     const ad1 = new AddressBook('tmp/tests/address_book.json');
-    await ad1.loadBootstrap('resources/tests/bootstrap.json');
+    await ad1.loadBootstrap('resources/tests/bootstrap.json', false);
     ad1.save();
     expect(ad1.getAll().size).toEqual(2);
   });

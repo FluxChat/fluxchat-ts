@@ -18,7 +18,7 @@ export class AddressBook extends Database<string, Client> {
     this._logger.debug(f('constructor(%s)', this._filePath));
   }
 
-  public async loadBootstrap(path: string): Promise<void> {
+  public async loadBootstrap(path: string, clean: boolean = true): Promise<void> {
     this._logger.debug(f('loadBootstrap(%s)', path));
 
     if (!fs.existsSync(path)) {
@@ -41,7 +41,9 @@ export class AddressBook extends Database<string, Client> {
       }
     }
 
-    fs.writeFileSync(path, '[]', 'utf8');
+    if (clean) {
+      fs.writeFileSync(path, '[]', 'utf8');
+    }
   }
 
   public addClient(client: Client): void {
