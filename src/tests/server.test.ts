@@ -28,6 +28,10 @@ function createCommand(): Command {
 }
 
 class TestServer extends Server {
+  public clientReadRaw(data: Buffer): Array<Command> {
+    return this._clientReadRaw(data);
+  }
+
   public clientHandleCommand() {
     const client = createClient();
     const command = createCommand();
@@ -42,6 +46,20 @@ describe('Server', () => {
     const server = new TestServer(config);
 
     expect(server).not.toBeNull();
+  });
+
+  test('clientReadRaw', () => {
+    const config = createConfig();
+    const server = new TestServer(config);
+
+    // flags_b + group_b + command_b + payload_len_b + payload + b'\x00'
+    const raw: Array<any> = [
+      [0, 0, 0, 0, 0],
+    ];
+
+    const commands = server.clientReadRaw(Buffer.from(''));
+    expect(commands).not.toBeNull();
+    expect(commands).toHaveLength(0);
   });
 
   test('clientHandleCommand', () => {
