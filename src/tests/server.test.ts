@@ -5,6 +5,11 @@ import { Server } from '../lib/server';
 import { Client } from '../lib/client';
 import { Command } from '../lib/network';
 
+interface RawData {
+  raw: Array<number>;
+  commands: Array<Command>;
+};
+
 function createConfig(): Config {
   return {
     address: '',
@@ -52,9 +57,11 @@ describe('Server', () => {
     const config = createConfig();
     const server = new TestServer(config);
 
-    // flags_b + group_b + command_b + payload_len_b + payload + b'\x00'
-    const raw: Array<any> = [
-      [0, 0, 0, 0, 0],
+    const raw: Array<RawData> = [
+      {
+        raw: [0, 0, 0, 0, 0],
+        commands: [],
+      },
     ];
 
     const commands = server.clientReadRaw(Buffer.from(''));

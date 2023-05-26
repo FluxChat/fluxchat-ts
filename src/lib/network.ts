@@ -2,7 +2,7 @@
 export class Command {
   public group: number = 0;
   public command: number = 0;
-  public payload: string = '';
+  public payload: any = null;
 }
 
 export abstract class Network {

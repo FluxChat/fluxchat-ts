@@ -166,6 +166,7 @@ export class Server extends Network {
   private _onClientData(client: Client, data: Buffer): void {
     this._logger.debug(f('_onClientData(%s)', client));
     this._logger.debug(f('data: %s', data));
+
     const commands: Array<Command> = this._clientReadRaw(data);
     for (let command of commands) {
       this._logger.debug(f('command: %s', command));

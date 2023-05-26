@@ -14,19 +14,19 @@ describe('AddressBook', () => {
     client2.address = 'address2';
     client2.port = 5678;
 
-    const ad1 = new AddressBook('tmp/tests/address_book.json');
-    ad1.addClient(client1);
-    ad1.addClient(client2);
-    ad1.save();
+    const addressbook1 = new AddressBook('tmp/tests/address_book.json');
+    addressbook1.addClient(client1);
+    addressbook1.addClient(client2);
+    addressbook1.save();
 
-    const ad2 = new AddressBook('tmp/tests/address_book.json');
-    ad2.load();
-    expect(typeof ad2.getAll).toEqual('function');
-    expect(typeof ad2.getAll()).toEqual('object');
-    // console.log(ad2.getAll());
-    expect(ad2.getAll().size).toEqual(2);
+    const addressbook2 = new AddressBook('tmp/tests/address_book.json');
+    addressbook2.load();
+    expect(typeof addressbook2.getAll).toEqual('function');
+    expect(typeof addressbook2.getAll()).toEqual('object');
+    // console.log(addressbook2.getAll());
+    expect(addressbook2.getAll().size).toEqual(2);
 
-    const client1b: Client | null = ad2.get('uuid1');
+    const client1b: Client | null = addressbook2.get('uuid1');
     expect(client1b).not.toBeNull();
     if (client1b) {
       expect(client1b.toString()).toEqual('Client(uuid1)');
@@ -34,9 +34,9 @@ describe('AddressBook', () => {
   });
 
   test('bootstrap', async () => {
-    const ad1 = new AddressBook('tmp/tests/address_book.json');
-    await ad1.loadBootstrap('resources/tests/bootstrap.json', false);
-    ad1.save();
-    expect(ad1.getAll().size).toEqual(2);
+    const addressbook1 = new AddressBook('tmp/tests/address_book.json');
+    await addressbook1.loadBootstrap('resources/tests/bootstrap.json', false);
+    addressbook1.save();
+    expect(addressbook1.getAll().size).toEqual(2);
   });
 });

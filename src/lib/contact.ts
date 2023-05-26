@@ -5,7 +5,6 @@ async function dnsLookup(domain: string): Promise<string> {
   return new Promise((resolve, reject) => {
     dns.lookup(domain, (err, address: string, family) => {
       if(err) reject(err);
-      console.log('address', address, typeof address);
       resolve(address);
     });
  });
@@ -53,15 +52,12 @@ export class Contact {
       } else {
         // Addr is host, we have to resolve it.
         try {
-          // console.log('DNS lookup', contact.addr);
           const address: string = await dnsLookup(contact.addr);
-          // console.log('address', address);
           if (net.isIPv4(address)) {
             if (address.slice(0, 4) === '127.') {
               contact.addr = null;
             }
           }
-          // console.log('DNS lookup Done');
         } catch (error) {
           contact.addr = null;
         }
