@@ -128,13 +128,13 @@ export class Server extends Network {
   private _onMainServerConnection(socket: tls.TLSSocket): void {
     this._logger.info('_onConnection()');
 
-    this._logger.debug(f('socket.address %s', socket.address()));
-    this._logger.debug(f('socket.authorized %s', socket.authorized));
-    this._logger.debug(f('socket.authorizationError %s', socket.authorizationError));
-    this._logger.debug(f('socket.encrypted %s', socket.encrypted));
-    this._logger.debug(f('socket.getCipher() %s', socket.getCipher()));
-    this._logger.debug(f('socket.remoteAddress %s:%d', socket.remoteAddress, socket.remotePort));
-    this._logger.debug(f('socket.localAddress %s:%d', socket.localAddress, socket.localPort));
+    this._logger.debug(f('address %s', socket.address()));
+    this._logger.debug(f('authorized %s', socket.authorized));
+    this._logger.debug(f('authorizationError %s', socket.authorizationError));
+    this._logger.debug(f('encrypted %s', socket.encrypted));
+    this._logger.debug(f('getCipher() %s', socket.getCipher()));
+    this._logger.debug(f('remoteAddress %s:%d', socket.remoteAddress, socket.remotePort));
+    this._logger.debug(f('localAddress %s:%d', socket.localAddress, socket.localPort));
 
     let client = new Client();
     client.socket = socket;
