@@ -110,7 +110,7 @@ export class Server extends Network {
 
     this._logger.info('shutdown clients');
     for (let [c_uuid, client] of this._clients) {
-      this._logger.debug(f('client %s %s', c_uuid, client.uuid));
+      this._logger.debug(f('client %s', client.uuid));
       client.socket?.destroy();
     }
 
