@@ -7,7 +7,6 @@ import { LoggerFactory } from './logger';
 import { Serializable } from './database';
 
 export interface ClientData {
-  // readonly uuid: string;
   address?: string;
   port?: number;
 }
@@ -20,10 +19,8 @@ export class Client implements Serializable, ClientData {
   private readonly _logger: winston.Logger;
   public socket: tls.TLSSocket | null = null;
 
-  // constructor() {
   constructor(uuid: string | null = null) {
     this.uuid = uuid || crypto.randomUUID();
-    // this.uuid = crypto.randomUUID();
 
     this._logger = LoggerFactory.getInstance().createLogger('client');
     this._logger.info(f('constructor(%s)', this.uuid));

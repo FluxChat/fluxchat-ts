@@ -167,7 +167,7 @@ export class Server extends Network {
     this._logger.debug(f('_onClientData(%s)', client));
     this._logger.debug(f('data: %s', data));
 
-    const commands: Array<Command> = this._clientReadRaw(data);
+    const commands: Array<Command> = this._parseRaw(data);
     for (let command of commands) {
       this._logger.debug(f('command: %s', command));
       this._clientHandleCommand(client, command);
@@ -232,7 +232,24 @@ export class Server extends Network {
   }
 
   protected _clientHandleCommand(client: Client, command: Command): void {
-    // TODO
     this._logger.debug(f('_clientHandleCommand(%s, %s)', client.uuid, command));
+
+    switch (command.group) {
+      case 0:
+        switch (command.command) {
+          case 0:
+            this._logger.debug(f('command %s', command));
+            break;
+
+          default:
+            this._logger.warn(f('unknown command %s', command));
+            break;
+        }
+        break;
+
+      default:
+        this._logger.warn(f('unknown group %s', command));
+        break;
+    }
   }
 }

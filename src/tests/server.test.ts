@@ -6,8 +6,8 @@ import { Client } from '../lib/client';
 import { Command } from '../lib/network';
 
 interface RawData {
-  raw: Array<number>;
-  commands: Array<Command>;
+  test: Array<number>;
+  expect: Array<Command>;
 };
 
 function createConfig(): Config {
@@ -33,15 +33,8 @@ function createCommand(): Command {
 }
 
 class TestServer extends Server {
-  public clientReadRaw(data: Buffer): Array<Command> {
-    return this._clientReadRaw(data);
-  }
-
-  public clientHandleCommand() {
-    const client = createClient();
-    const command = createCommand();
-
-    this._clientHandleCommand(client, command);
+  public parseRaw(data: Buffer): Array<Command> {
+    return this._parseRaw(data);
   }
 }
 
@@ -57,22 +50,57 @@ describe('Server', () => {
     const config = createConfig();
     const server = new TestServer(config);
 
-    const raw: Array<RawData> = [
+    const testData: Array<RawData> = [
       {
-        raw: [0, 0, 0, 0, 0],
-        commands: [],
+        test: [0, 0, 0, 0, 0, 0, 0, 0],
+        expect: [
+          new Command(),
+        ],
+      },
+      {
+        test: [0, 1, 2, 0, 0, 0, 0, 0],
+        expect: [
+          new Command(1, 2),
+        ],
+      },
+      {
+        test: [0, 3, 4, 0, 0, 0, 0, 0],
+        expect: [
+          new Command(3, 4),
+        ],
+      },
+      {
+        test: [0, 3, 4, 2, 0, 0, 0, 1, 65, 0],
+        expect: [
+          new Command(3, 4, ['A']),
+        ],
+      },
+      {
+        test: [0, 5, 6, 9, 0, 0, 0, 3, 65, 66, 67, 2, 65, 66, 1, 65, 0],
+        expect: [
+          new Command(5, 6, ['ABC', 'AB', 'A']),
+        ],
+      },
+      {
+        test: [
+          0, 7, 8, 9, 0, 0, 0, 3, 65, 66, 67, 2, 65, 66, 1, 65, 0,
+          0, 9, 10, 14, 0, 0, 0, 4, 65, 66, 67, 68, 3, 65, 66, 67, 2, 65, 66, 1, 65, 0,
+        ],
+        expect: [
+          new Command(7, 8, ['ABC', 'AB', 'A']),
+          new Command(9, 10, ['ABCD', 'ABC', 'AB', 'A']),
+        ],
       },
     ];
 
-    const commands = server.clientReadRaw(Buffer.from(''));
-    expect(commands).not.toBeNull();
-    expect(commands).toHaveLength(0);
-  });
+    for (let row of testData) {
+      const raw = Buffer.from(row.test);
+      // console.log('raw', raw);
 
-  test('clientHandleCommand', () => {
-    const config = createConfig();
-    const server = new TestServer(config);
+      const commands = server.parseRaw(raw);
 
-    server.clientHandleCommand();
+      expect(commands).not.toBeNull();
+      expect(commands).toHaveLength(row.expect.length);
+    }
   });
 });
