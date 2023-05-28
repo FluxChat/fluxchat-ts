@@ -46,18 +46,6 @@ jobs:
         with:
           node-version: 20
 
-      - name: SSH Key
-        run: |
-          install -m 600 -D /dev/null ~/.ssh/id_rsa
-          ls -la ~/.ssh/
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          ls -la ~/.ssh/
-
-      - name: Set up NodeJS
-        uses: actions/setup-node@v3
-        with:
-          node-version: 20
-
       - name: Install Dependencies
         run: |
           node --version
@@ -66,6 +54,13 @@ jobs:
 
       - name: Run Tests
         run: ./bin/tests.sh
+
+      - name: SSH Key
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/id_rsa
+          ls -la ~/.ssh/
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          ls -la ~/.ssh/
 
       - name: Deploy
         run: ./bin/deploy.sh
