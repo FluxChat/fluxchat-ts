@@ -11,6 +11,14 @@ export interface ClientData {
   port?: number;
 }
 
+export interface BaseClient {
+  uuid: string;
+}
+
+export interface ConnectedClient extends BaseClient {
+  socket: tls.TLSSocket;
+}
+
 export class Client implements Serializable, ClientData {
   public uuid: string;
   public address?: string;

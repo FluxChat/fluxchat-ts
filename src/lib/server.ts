@@ -10,7 +10,7 @@ import { LoggerFactory } from './logger';
 import { Config } from './config';
 import { Command, Network } from './network';
 import { AddressBook } from './address_book';
-import { Client } from './client';
+import { Client, ConnectedClient } from './client';
 
 export class Server extends Network {
   private _shutdown: boolean = false;
@@ -235,21 +235,46 @@ export class Server extends Network {
     this._logger.debug(f('_clientHandleCommand(%s, %s)', client.uuid, command));
 
     switch (command.group) {
-      case 0:
+      case 0: // Basic
         switch (command.command) {
-          case 0:
-            this._logger.debug(f('command %s', command));
+          case 0: // OK
+            this._logger.debug(f('OK command %s', command));
             break;
 
           default:
-            this._logger.warn(f('unknown command %s', command));
+            this._logger.warn(f('unknown command %d:%d', command.group, command.command));
+            break;
+        }
+        break;
+
+      case 1: // Connection, Authentication, etc
+        switch (command.command) {
+          case 0: // CHALLENGE
+            this._logger.debug(f('CHALLENGE command'));
             break;
         }
         break;
 
       default:
-        this._logger.warn(f('unknown group %s', command));
+        this._logger.warn(f('unknown command %d:%d', command.group, command.command));
         break;
     }
+  }
+
+  private _clientSendCommand(client: ConnectedClient, command: Command): void {
+    this._logger.debug(f('_clientSendCommand(%s, %s)', client.uuid, command));
+
+    const data = this._serializeCommand(command);
+    this._logger.debug(f('data %s', data));
+
+    this._logger.debug(f('write socket', data));
+    client.socket.write(data);
+  }
+
+  private _clientSendOk(client: ConnectedClient): void {
+    this._logger.debug(f('_clientSendOk(%s)', client.uuid));
+
+    const command = new Command(0, 0);
+    this._clientSendCommand(client, command);
   }
 }
