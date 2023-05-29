@@ -15,3 +15,6 @@ indent_style = tab
 [*.ts]
 indent_style = space
 indent_size = 2
+
+[*.hex]
+insert_final_newline = false
