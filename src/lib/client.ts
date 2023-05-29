@@ -6,7 +6,7 @@ import { format as f } from 'util';
 import { LoggerFactory } from './logger';
 import { Serializable } from './database';
 
-export interface ClientData {
+interface JsonClient {
   address?: string;
   port?: number;
 }
@@ -19,7 +19,7 @@ export interface ConnectedClient extends BaseClient {
   socket: tls.TLSSocket;
 }
 
-export class Client implements Serializable, ClientData {
+export class Client implements Serializable, JsonClient {
   public uuid: string;
   public address?: string;
   public port?: number;
@@ -48,7 +48,7 @@ export class Client implements Serializable, ClientData {
 
   fromJSON(data: object, key: string): void {
     this._logger.info(f('fromJSON(%s)', key));
-    const _mapped = data as ClientData;
+    const _mapped = data as JsonClient;
 
     this.uuid = key;
     this.address = _mapped.address;

@@ -249,8 +249,12 @@ export class Server extends Network {
 
       case 1: // Connection, Authentication, etc
         switch (command.command) {
-          case 0: // CHALLENGE
+          case 1: // CHALLENGE command
             this._logger.debug(f('CHALLENGE command'));
+            break;
+
+            case 2: // ID command
+            this._logger.debug(f('ID command'));
             break;
         }
         break;
