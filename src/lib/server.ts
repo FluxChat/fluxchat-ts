@@ -238,7 +238,7 @@ export class Server extends Network {
       case 0: // Basic
         switch (command.command) {
           case 0: // OK
-            this._logger.debug(f('OK command %s', command));
+            this._logger.debug(f('OK command'));
             break;
 
           default:
@@ -253,8 +253,39 @@ export class Server extends Network {
             this._logger.debug(f('CHALLENGE command'));
             break;
 
-            case 2: // ID command
+          case 2: // ID command
             this._logger.debug(f('ID command'));
+            break;
+
+          case 3: // PING command
+            this._logger.debug(f('PING command'));
+            break;
+
+          case 4: // PONG command
+            this._logger.debug(f('PONG command'));
+            break;
+        }
+        break;
+
+      case 2: // Overlay, Address Book, Routing, etc
+        switch (command.command) {
+          case 1: // GET_NEAREST_TO command
+            break;
+
+          case 2: // GET_NEAREST_TO RESPONSE command
+            break;
+
+          case 3: // REQUEST PUBLIC KEY FOR NODE command
+            break;
+
+          case 4: // RESPONSE PUBLIC KEY FOR NODE command
+            break;
+        }
+        break;
+
+      case 3: // Mail
+        switch (command.command) {
+          case 1: // SEND MAIL command
             break;
         }
         break;

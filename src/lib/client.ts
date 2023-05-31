@@ -6,6 +6,17 @@ import { format as f } from 'util';
 import { LoggerFactory } from './logger';
 import { Serializable } from './database';
 
+export enum ConnectionMode {
+  Disconnected,
+  Connected,
+  Authenticated,
+}
+
+export enum Direction {
+  Inbound,
+  Outbound,
+}
+
 interface JsonClient {
   address?: string;
   port?: number;
@@ -19,10 +30,26 @@ export interface ConnectedClient extends BaseClient {
   socket: tls.TLSSocket;
 }
 
-export class Client implements Serializable, JsonClient {
+export class Client implements Serializable, JsonClient, BaseClient {
   public uuid: string;
   public address?: string;
   public port?: number;
+  public id?: string;
+  public seen_at?: Date;
+  public meetings?: number;
+  public is_bootstrap?: boolean;
+  public is_trusted?: boolean;
+  public debug_add?: string;
+
+  // Unmapped
+  // TODO: node
+  public conn_mode: ConnectionMode = ConnectionMode.Disconnected;
+  public conn_msg: string | null = null;
+
+  public auth: number = 0;
+
+  // TODO: actions
+  // TODO: challenge
 
   private readonly _logger: winston.Logger;
   public socket: tls.TLSSocket | null = null;
