@@ -270,15 +270,19 @@ export class Server extends Network {
       case 2: // Overlay, Address Book, Routing, etc
         switch (command.command) {
           case 1: // GET_NEAREST_TO command
+            this._logger.debug(f('GET_NEAREST_TO command'));
             break;
 
           case 2: // GET_NEAREST_TO RESPONSE command
+            this._logger.debug(f('GET_NEAREST_TO RESPONSE command'));
             break;
 
           case 3: // REQUEST PUBLIC KEY FOR NODE command
+            this._logger.debug(f('REQUEST PUBLIC KEY FOR NODE command'));
             break;
 
           case 4: // RESPONSE PUBLIC KEY FOR NODE command
+            this._logger.debug(f('RESPONSE PUBLIC KEY FOR NODE command'));
             break;
         }
         break;
@@ -286,6 +290,7 @@ export class Server extends Network {
       case 3: // Mail
         switch (command.command) {
           case 1: // SEND MAIL command
+            this._logger.debug(f('SEND MAIL command'));
             break;
         }
         break;

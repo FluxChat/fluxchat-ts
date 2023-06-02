@@ -1,5 +1,5 @@
 
-import {describe, expect, jest, test, it} from '@jest/globals';
+import { describe, expect, jest, test, it } from '@jest/globals';
 import { Client } from '../lib/client';
 import { AddressBook } from '../lib/address_book';
 

@@ -1,5 +1,5 @@
 
-import {describe, expect, jest, test} from '@jest/globals';
+import { describe, expect, jest, test } from '@jest/globals';
 import { Node, Distance } from '../lib/overlay';
 
 describe('Node', () => {

@@ -1,6 +1,15 @@
 
 import { Socket } from 'net';
 import { strict as assert } from 'assert';
+import { networkInterfaces, NetworkInterfaceInfo } from 'os';
+
+export function isIPv6Enabled(): boolean {
+  const interfaces = networkInterfaces();
+  delete interfaces['lo0'];
+  console.log('interfaces', interfaces);
+
+  return false;
+}
 
 export class Command {
   constructor(

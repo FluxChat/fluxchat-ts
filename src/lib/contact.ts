@@ -5,12 +5,6 @@ async function dnsLookup(hostname: string): Promise<string> {
   return new Promise((resolve, reject) => {
     console.log('dnsLookup', hostname);
 
-    // dns.lookup(hostname, (err, address: string, family: number) => {
-    //   console.log('dns.lookup', hostname, address, family);
-    //   if(err) reject(err);
-    //   resolve(address);
-    // });
-
     lookup(hostname, {all: true}, (err, addresses: LookupAddress[]) => {
       console.log('addresses', hostname, addresses);
 

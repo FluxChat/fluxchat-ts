@@ -1,5 +1,5 @@
 
-import {describe, expect, jest, test} from '@jest/globals';
+import { describe, expect, jest, test } from '@jest/globals';
 import { passwordKeyDerivation } from '../lib/helpers';
 
 test('pkd1', () => {
