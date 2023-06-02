@@ -1,11 +1,30 @@
-import * as dns from 'dns';
-import * as net from 'net';
+import { LookupAddress, lookup } from 'dns';
+import { isIPv4, isIPv6 } from 'net';
 
-async function dnsLookup(domain: string): Promise<string> {
+async function dnsLookup(hostname: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    dns.lookup(domain, (err, address: string, family) => {
-      if(err) reject(err);
-      resolve(address);
+    console.log('dnsLookup', hostname);
+
+    // dns.lookup(hostname, (err, address: string, family: number) => {
+    //   console.log('dns.lookup', hostname, address, family);
+    //   if(err) reject(err);
+    //   resolve(address);
+    // });
+
+    lookup(hostname, {all: true}, (err, addresses: LookupAddress[]) => {
+      console.log('addresses', hostname, addresses);
+
+      if(err) {
+        reject(err);
+      } else {
+        if (addresses === undefined) {
+          reject(new Error('No addresses found (undefined)'));
+        } else if (addresses.length === 0) {
+          reject(new Error('No addresses found (len 0)'));
+        } else {
+          resolve(addresses[0].address);
+        }
+      }
     });
  });
 };
@@ -15,12 +34,20 @@ export class Contact {
   port: number | null = null;
   is_valid: boolean = false;
 
-  constructor() {}
-
   static async resolve(raw: string, raddr: string | null = null): Promise<Contact> {
     const contact = new Contact();
 
-    const items = raw.split(':');
+    let items: string[];
+    if (raw.includes('[') && raw.includes(']')) {
+      items = raw.split(']');
+      items = [
+        items[0].slice(1),
+        items[1].slice(1),
+      ];
+    }
+    else {
+      items = raw.split(':');
+    }
 
     if (items.length === 1) {
       contact.addr = items[0];
@@ -32,6 +59,12 @@ export class Contact {
       } else {
         contact.port = parseInt(items[1]);
       }
+    } else if (items.length > 2) {
+      // IPv6 address with port
+      contact.addr = items.slice(0, items.length - 1).join(':');
+      contact.port = parseInt(items[items.length - 1]);
+
+      console.log('IPv6', contact.addr, contact.port);
     }
 
     if (contact.addr === '') {
@@ -44,17 +77,22 @@ export class Contact {
       contact.addr = null;
       contact.port = null;
     } else if (contact.addr !== null) {
-      if (net.isIPv4(contact.addr)) {
-        // Addr is IP address, we can use it directly.
+      if (isIPv4(contact.addr)) {
+        // Addr is IPv4 address, we can use it directly.
         if (contact.addr.slice(0, 4) === '127.') {
+          contact.addr = null;
+        }
+      } else if (isIPv6(contact.addr)) {
+        // Addr is IPv6 address, we can use it directly.
+        if (contact.addr == '::' || contact.addr == '::1') {
           contact.addr = null;
         }
       } else {
         // Addr is host, we have to resolve it.
         try {
           const address: string = await dnsLookup(contact.addr);
-          if (net.isIPv4(address)) {
-            if (address.slice(0, 4) === '127.') {
+          if (isIPv4(address)) {
+            if (address.slice(0, 4) === '127.' || address == '::1') {
               contact.addr = null;
             }
           }
