@@ -1,12 +1,29 @@
 
-import { Socket } from 'net';
 import { strict as assert } from 'assert';
 import { networkInterfaces, NetworkInterfaceInfo } from 'os';
 
 export function isIPv6Enabled(): boolean {
   const interfaces = networkInterfaces();
-  delete interfaces['lo0'];
-  console.log('interfaces', interfaces);
+
+  // console.log('interfaces', interfaces);
+
+  for (const [name, ifaces] of Object.entries(interfaces)) {
+    // console.log('name', name);
+
+    if (ifaces === undefined) {
+      continue;
+    }
+
+    const found = ifaces.find((iface: NetworkInterfaceInfo) => {
+      // console.log('iface', iface.address, iface.family);
+      return iface.address[0] == '2' && iface.family === 'IPv6';
+    });
+
+    // console.log('found', found);
+    if (found !== undefined) {
+      return true;
+    }
+  }
 
   return false;
 }

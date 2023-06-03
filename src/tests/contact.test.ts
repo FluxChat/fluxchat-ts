@@ -1,15 +1,7 @@
 
 import { describe, expect, jest, test, it } from '@jest/globals';
-import { networkInterfaces, type } from 'os';
 import { Contact } from '../lib/contact';
 import { isIPv6Enabled } from '../lib/network';
-
-const defaultInterface = Object.values(networkInterfaces()).find((iface) => {
-  console.log('iface', iface, typeof iface);
-  iface.find((address) => { !address.internal && address.family === 'IPv4' });
-});
-
-console.log('Standardnetzwerkinterface:', defaultInterface);
 
 interface TestData {
   addr: string | null;
@@ -29,6 +21,7 @@ async function runTestData(data: TestArray): Promise<void> {
     };
 
     const actual = await Contact.resolve(contact_s, raddr);
+
     expect(actual.addr).toEqual(expected.addr);
     expect(actual.port).toEqual(expected.port);
     expect(actual.is_valid).toEqual(expected.is_valid);
@@ -36,7 +29,6 @@ async function runTestData(data: TestArray): Promise<void> {
 }
 
 describe('Contact', () => {
-  console.log('Contact');
   test('resolve_ipv4', async () => {
     const data: TestArray = [
       // IPv4

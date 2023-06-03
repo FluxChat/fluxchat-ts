@@ -3,21 +3,19 @@ import { isIPv4, isIPv6 } from 'net';
 
 async function dnsLookup(hostname: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    console.log('dnsLookup', hostname);
+    // console.log('dnsLookup', hostname);
 
     lookup(hostname, {all: true}, (err, addresses: LookupAddress[]) => {
-      console.log('addresses', hostname, addresses);
+      // console.log('addresses', hostname, addresses);
 
       if(err) {
         reject(err);
+      } else if (addresses === undefined) {
+        reject(new Error('No addresses found (undefined)'));
+      } else if (addresses.length === 0) {
+        reject(new Error('No addresses found (len 0)'));
       } else {
-        if (addresses === undefined) {
-          reject(new Error('No addresses found (undefined)'));
-        } else if (addresses.length === 0) {
-          reject(new Error('No addresses found (len 0)'));
-        } else {
-          resolve(addresses[0].address);
-        }
+        resolve(addresses[0].address);
       }
     });
  });
@@ -58,7 +56,7 @@ export class Contact {
       contact.addr = items.slice(0, items.length - 1).join(':');
       contact.port = parseInt(items[items.length - 1]);
 
-      console.log('IPv6', contact.addr, contact.port);
+      // console.log('IPv6', contact.addr, contact.port);
     }
 
     if (contact.addr === '') {
