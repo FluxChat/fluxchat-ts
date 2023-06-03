@@ -1,14 +1,14 @@
 
-import * as fs from 'fs';
-import * as winston from 'winston';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { format as f } from 'util';
+import { Logger } from 'winston';
 import { LoggerFactory } from './logger';
 import { Client } from './client';
 import { Database } from './database';
 import { Contact } from './contact';
 
 export class AddressBook extends Database<string, Client> {
-  private readonly _logger: winston.Logger;
+  private readonly _logger: Logger;
   protected readonly _typex: new () => Client = Client;
 
   constructor(_filePath: string) {
@@ -21,10 +21,10 @@ export class AddressBook extends Database<string, Client> {
   public async loadBootstrap(path: string, clean: boolean = true): Promise<void> {
     this._logger.debug(f('loadBootstrap(%s)', path));
 
-    if (!fs.existsSync(path)) {
+    if (!existsSync(path)) {
       return;
     }
-    const data: Array<string> = JSON.parse(fs.readFileSync(path, 'utf8')) as Array<string>;
+    const data: Array<string> = JSON.parse(readFileSync(path, 'utf8')) as Array<string>;
     // console.log('loadBootstrap', data);
 
     for (const _contact of data) {
@@ -42,7 +42,7 @@ export class AddressBook extends Database<string, Client> {
     }
 
     if (clean) {
-      fs.writeFileSync(path, '[]', 'utf8');
+      writeFileSync(path, '[]', 'utf8');
     }
   }
 

@@ -1,15 +1,15 @@
 
 const minimist = require('minimist');
-import * as winston from 'winston';
-import * as fs from 'fs';
+import { join as pjoin } from 'path';
+import { readFileSync, writeFileSync, unlinkSync } from 'fs';
+import { Logger } from 'winston';
+import { LoggerFactory } from '../lib/logger';
 import { App } from '../lib/app';
 import { Config } from '../lib/config';
-import { LoggerFactory } from '../lib/logger';
 import { Server } from '../lib/server';
-import path from 'path';
 
 class ServerApp extends App {
-  private readonly _logger: winston.Logger;
+  private readonly _logger: Logger;
   private readonly _server: Server;
   private readonly _pidFile: string;
 
@@ -22,11 +22,11 @@ class ServerApp extends App {
     process.on('SIGTERM', this._shutdown.bind(this));
 
     // Read the configuration file
-    const config: Config = JSON.parse(fs.readFileSync(_args.config, 'utf8'));
+    const config: Config = JSON.parse(readFileSync(_args.config, 'utf8'));
 
     // PID file
-    this._pidFile = path.join(config.data_dir, 'server.pid');
-    fs.writeFileSync(this._pidFile, process.pid.toString());
+    this._pidFile = pjoin(config.data_dir, 'server.pid');
+    writeFileSync(this._pidFile, process.pid.toString());
 
     LoggerFactory.init(config, _args.loglevel);
     this._logger = LoggerFactory.getInstance().createLogger('server_app');
@@ -53,7 +53,7 @@ class ServerApp extends App {
     process.removeAllListeners('SIGINT');
     process.removeAllListeners('SIGTERM');
 
-    fs.unlinkSync(this._pidFile);
+    unlinkSync(this._pidFile);
   }
 }
 const options = {

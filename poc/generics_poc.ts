@@ -1,5 +1,5 @@
 
-import * as fs from 'fs';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 
 class Client {
   private readonly _uuid: string = '1234567890';
@@ -27,8 +27,8 @@ abstract class Database<K extends KeyType, T extends object> {
 
   public load(defaultData: DataType<K, T> = {} as DataType<K, T>) {
     console.log('-> Database.load()');
-    if (this._filePath !== null && fs.existsSync(this._filePath)) {
-      const data: string = fs.readFileSync(this._filePath, 'utf8');
+    if (this._filePath !== null && existsSync(this._filePath)) {
+      const data: string = readFileSync(this._filePath, 'utf8');
       console.log('-> Database.load() data', data);
       this._data = JSON.parse(data);
     } else {
@@ -41,7 +41,7 @@ abstract class Database<K extends KeyType, T extends object> {
     if (this._filePath === null) {
       return;
     }
-    fs.writeFileSync(this._filePath, JSON.stringify(this._data));
+    writeFileSync(this._filePath, JSON.stringify(this._data));
   }
 
   public add(key: K, value: T): void {

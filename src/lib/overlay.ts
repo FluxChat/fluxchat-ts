@@ -1,5 +1,5 @@
 
-import * as base58 from 'bs58';
+import { decode as b58dec } from 'bs58';
 
 export class Node {
   id: string;
@@ -29,7 +29,7 @@ export class Node {
   }
 
   public decode(): Uint8Array {
-    return base58.decode(this.id.substring(3));
+    return b58dec(this.id.substring(3));
   }
 
   public isValid(): boolean {

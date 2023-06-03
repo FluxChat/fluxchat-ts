@@ -1,6 +1,6 @@
 
-import * as tls from 'tls';
-import * as fs from 'fs';
+import { connect } from 'tls';
+import { readFileSync } from 'fs';
 
 const HOST = '127.0.0.1';
 const PORT = 25001;
@@ -10,13 +10,13 @@ const options = {
   host: HOST,
   port: PORT,
   key: [{
-    pem: fs.readFileSync('var/data2/private_key.pem'),
+    pem: readFileSync('var/data2/private_key.pem'),
     passphrase: process.env.FLUXCHAT_KEY_PASSWORD || 'password',
   }],
-  cert: fs.readFileSync('var/data2/certificate.pem'),
+  cert: readFileSync('var/data2/certificate.pem'),
   rejectUnauthorized: false,
 };
-const client = tls.connect(options, () => {
+const client = connect(options, () => {
   // Check if the authorization worked
   if (client.authorized) {
     console.log('Connection authorized by a Certificate Authority.');

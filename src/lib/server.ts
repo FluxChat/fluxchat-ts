@@ -1,12 +1,16 @@
 
-import * as crypto from 'crypto';
-import * as tls from 'tls';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as winston from 'winston';
+import {
+  TLSSocket,
+  connect as tlsConnect,
+  Server as TLSServer,
+  createServer as createTlsServer,
+} from 'tls';
+import { readFileSync } from 'fs';
+import { join as pjoin } from 'path';
+import { Logger } from 'winston';
+import { LoggerFactory } from './logger';
 import { format as f } from 'util';
 import { passwordKeyDerivation } from './helpers';
-import { LoggerFactory } from './logger';
 import { Config } from './config';
 import { Command, Network } from './network';
 import { AddressBook } from './address_book';
@@ -14,18 +18,16 @@ import { Client, ConnectedClient } from './client';
 
 export class Server extends Network {
   private _shutdown: boolean = false;
-  private readonly _logger: winston.Logger;
+  private readonly _logger: Logger;
   private _privateKeyDerivation: string | null = null;
   private readonly _privateKeyFilePath: string;
-  // private readonly _privateKey: crypto.KeyObject;
   private readonly _publicKeyFilePath: string;
-  // private readonly _publicKey: crypto.KeyObject;
   private readonly _certificateFilePath: string;
   private readonly _addressbookFilePath: string;
   private readonly _addressbookBootstrapFilePath: string;
 
   private _addressbook: AddressBook;
-  private _main_server: tls.Server | null = null;
+  private _main_server: TLSServer | null = null;
   private _clients: Map<string, Client> = new Map<string, Client>();
   private _tasks: Map<string, NodeJS.Timeout> = new Map<string, NodeJS.Timeout>();
 
@@ -36,15 +38,15 @@ export class Server extends Network {
 
     this._logger = LoggerFactory.getInstance().createLogger('server');
 
-    this._privateKeyFilePath = path.join(this._config.data_dir, 'private_key.pem');
-    this._publicKeyFilePath = path.join(this._config.data_dir, 'public_key.pem');
+    this._privateKeyFilePath = pjoin(this._config.data_dir, 'private_key.pem');
+    this._publicKeyFilePath = pjoin(this._config.data_dir, 'public_key.pem');
 
-    this._certificateFilePath = path.join(this._config.data_dir, 'certificate.pem');
+    this._certificateFilePath = pjoin(this._config.data_dir, 'certificate.pem');
     this._logger.debug('certificate file path', this._certificateFilePath);
 
-    this._addressbookFilePath = path.join(this._config.data_dir, 'address_book.json');
+    this._addressbookFilePath = pjoin(this._config.data_dir, 'address_book.json');
     this._logger.debug('address book file path', this._addressbookFilePath);
-    this._addressbookBootstrapFilePath = path.join(this._config.data_dir, 'bootstrap.json');
+    this._addressbookBootstrapFilePath = pjoin(this._config.data_dir, 'bootstrap.json');
     this._addressbook = new AddressBook(this._addressbookFilePath);
   }
 
@@ -77,12 +79,12 @@ export class Server extends Network {
     this._logger.info('start TLS server');
     const options = {
       key: [{
-        pem: fs.readFileSync(this._privateKeyFilePath),
+        pem: readFileSync(this._privateKeyFilePath),
         passphrase: this._privateKeyDerivation,
       }],
-      cert: fs.readFileSync(this._certificateFilePath),
+      cert: readFileSync(this._certificateFilePath),
     };
-    this._main_server = tls.createServer(options, this._onMainServerConnection.bind(this));
+    this._main_server = createTlsServer(options, this._onMainServerConnection.bind(this));
 
     this._main_server.listen(this._config.port, this._config.address, this._onMainServerListen.bind(this));
     this._main_server.on('close', this._onMainServerClose.bind(this));
@@ -125,7 +127,7 @@ export class Server extends Network {
     this._logger.debug('_onListen()');
   }
 
-  private _onMainServerConnection(socket: tls.TLSSocket): void {
+  private _onMainServerConnection(socket: TLSSocket): void {
     this._logger.info('_onConnection()');
 
     this._logger.debug(f('address %s', socket.address()));
@@ -220,8 +222,10 @@ export class Server extends Network {
       port: client.port,
       rejectUnauthorized: false,
     };
-    client.socket = tls.connect(options, this._onClientConnect.bind(this, client));
 
+    client.socket = tlsConnect(options, this._onClientConnect.bind(this, client));
+
+    client.socket.on('ready', this._onClientReady.bind(this, client));
     client.socket.on('data', this._onClientData.bind(this, client));
     client.socket.on('end', this._onClientEnd.bind(this, client));
     client.socket.on('close', this._onClientClose.bind(this));

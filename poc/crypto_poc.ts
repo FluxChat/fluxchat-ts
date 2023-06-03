@@ -1,7 +1,7 @@
 
-import * as crypto from 'crypto';
+import { generateKeyPairSync } from 'crypto';
 
-const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+const { publicKey, privateKey } = generateKeyPairSync('rsa', {
 	modulusLength: 4096,
 });
 

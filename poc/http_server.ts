@@ -1,10 +1,9 @@
 
-import * as http from 'http';
+import { format as f } from 'util';
+import { createServer as createHttpServer } from 'http';
 
-export const server = http.createServer((req, res) => {
-  console.log('Connection from ' + req.socket.remoteAddress + ':' + req.socket.remotePort + ' ' + req.method + ' ' + req.url);
-  // console.log('req', req);
-  // console.log('res', res);
+export const server = createHttpServer((req, res) => {
+  console.log(f('Connection from %s:%s %s "%s"', req.socket.remoteAddress, req.socket.remotePort, req.method, req.url));
 
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(

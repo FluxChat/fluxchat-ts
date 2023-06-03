@@ -1,6 +1,12 @@
 
-import * as path from 'path';
-import * as winston from 'winston';
+import { join as pjoin } from 'path';
+import {
+  Logger,
+  createLogger as wcreateLogger,
+  format as wformat,
+  transport as wtransport,
+  transports as wtransports,
+} from 'winston';
 import { Config } from './config';
 import { Format } from 'logform';
 
@@ -11,16 +17,16 @@ export class LoggerFactory {
   private static instance: LoggerFactory;
 
   private static _createDefaultFormat(): LogFormat {
-    return winston.format.combine(
-      winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
-      winston.format.printf((info) => `${info.timestamp} ${process.pid} ${info.level.toUpperCase()} ${info.label} ${info.message}`)
+    return wformat.combine(
+      wformat.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
+      wformat.printf((info) => `${info.timestamp} ${process.pid} ${info.level.toUpperCase()} ${info.label} ${info.message}`)
     );
   }
 
   public static init(config: Config, addlogLevel: LogLevel = undefined): void {
     let logFile: string = config.log.file;
     if (!logFile.startsWith('/') && !logFile.includes('/')) {
-      logFile = path.join(config.data_dir, logFile);
+      logFile = pjoin(config.data_dir, logFile);
     }
     let effectiveLogLevel: LogLevel = addlogLevel === undefined ? config.log.level : addlogLevel;
     const format = LoggerFactory._createDefaultFormat();
@@ -48,23 +54,23 @@ export class LoggerFactory {
   ) {
   }
 
-  public createLogger(name: string): winston.Logger {
-    const transports: winston.transport[] = [
-      new winston.transports.Console({
+  public createLogger(name: string): Logger {
+    const transports: wtransport[] = [
+      new wtransports.Console({
       }),
-      new winston.transports.File({
+      new wtransports.File({
         filename: this._logFile,
       }),
     ];
 
-    const format = winston.format.combine(
-      winston.format.label({ label: name }),
+    const _f = wformat.combine(
+      wformat.label({ label: name }),
       this._format,
     );
 
-    return winston.createLogger({
+    return wcreateLogger({
       level: this._logLevel,
-      format: format,
+      format: _f,
       transports: transports,
     });
   }

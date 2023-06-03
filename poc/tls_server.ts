@@ -1,6 +1,6 @@
 
-import * as tls from 'tls';
-import * as fs from 'fs';
+import { createServer } from 'tls';
+import { readFileSync } from 'fs';
 
 const PORT = 4000;
 const HOST = '127.0.0.1';
@@ -8,12 +8,12 @@ const HOST = '127.0.0.1';
 const options = {
   // sessionTimeout: 10,
   key: [{
-    pem: fs.readFileSync('var/data1/private_key.pem'),
+    pem: readFileSync('var/data1/private_key.pem'),
     passphrase: process.env.FLUXCHAT_KEY_PASSWORD || 'password',
   }],
-  cert: fs.readFileSync('var/data1/certificate.pem'),
+  cert: readFileSync('var/data1/certificate.pem'),
 };
-const server = tls.createServer(options, (socket) => {
+const server = createServer(options, (socket) => {
   // Send a friendly message
   socket.write('I am the server sending you a message.');
 

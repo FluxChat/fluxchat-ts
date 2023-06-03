@@ -1,8 +1,8 @@
 
-import * as tls from 'tls';
-import * as winston from 'winston';
-import * as crypto from 'crypto';
 import { format as f } from 'util';
+import { TLSSocket } from 'tls';
+import { randomUUID } from 'crypto';
+import { Logger } from 'winston';
 import { LoggerFactory } from './logger';
 import { Serializable } from './database';
 
@@ -27,7 +27,7 @@ export interface BaseClient {
 }
 
 export interface ConnectedClient extends BaseClient {
-  socket: tls.TLSSocket;
+  socket: TLSSocket;
 }
 
 export class Client implements Serializable, JsonClient, BaseClient {
@@ -51,11 +51,11 @@ export class Client implements Serializable, JsonClient, BaseClient {
   // TODO: actions
   // TODO: challenge
 
-  private readonly _logger: winston.Logger;
-  public socket: tls.TLSSocket | null = null;
+  private readonly _logger: Logger;
+  public socket: TLSSocket | null = null;
 
   constructor(uuid: string | null = null) {
-    this.uuid = uuid || crypto.randomUUID();
+    this.uuid = uuid || randomUUID();
 
     this._logger = LoggerFactory.getInstance().createLogger('client');
     this._logger.info(f('constructor(%s)', this.uuid));

@@ -1,7 +1,7 @@
 
-import * as fs from 'fs';
-import * as winston from 'winston';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { format as f } from 'util';
+import { Logger } from 'winston';
 import { LoggerFactory } from './logger';
 
 type KeyType = string | number;
@@ -12,7 +12,7 @@ export interface Serializable {
 };
 
 export abstract class Database<K extends KeyType, T extends Serializable> {
-  private readonly _plogger: winston.Logger;
+  private readonly _plogger: Logger;
   protected _data: Map<K, T>;
   protected _changed: boolean = false;
   protected abstract readonly _typex: new () => T;
@@ -25,8 +25,8 @@ export abstract class Database<K extends KeyType, T extends Serializable> {
   public load(defaultData: Map<K, T> = new Map<K, T>()): void {
     this._plogger.debug('load()');
 
-    if (fs.existsSync(this._filePath)) {
-      const jsonObject = JSON.parse(fs.readFileSync(this._filePath, 'utf8'));
+    if (existsSync(this._filePath)) {
+      const jsonObject = JSON.parse(readFileSync(this._filePath, 'utf8'));
       const entries = Object.entries(jsonObject);
 
       entries.forEach(([key, value]) => {
@@ -62,7 +62,7 @@ export abstract class Database<K extends KeyType, T extends Serializable> {
     const entries = Array.from(_map.entries());
     const obj = Object.fromEntries(entries);
 
-    fs.writeFileSync(this._filePath, JSON.stringify(obj, null, 4));
+    writeFileSync(this._filePath, JSON.stringify(obj, null, 4));
 
     this._changed = false;
   }
