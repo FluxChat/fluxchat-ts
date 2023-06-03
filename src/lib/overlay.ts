@@ -2,10 +2,9 @@
 import { decode as b58dec } from 'bs58';
 
 export class Node {
-  id: string;
-
-  constructor(id: string) {
-    this.id = id;
+  constructor(
+    public readonly id: string,
+  ) {
   }
 
   public valueOf(): string {

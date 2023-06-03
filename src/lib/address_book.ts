@@ -31,6 +31,8 @@ export class AddressBook extends Database<string, Client> {
       const contact = await Contact.resolve(_contact);
       if (contact.is_valid) {
         const client = new Client();
+        client.debug_add = 'bootstrap';
+        client.is_bootstrap = true;
         if (contact.addr) {
           client.address = contact.addr;
         }

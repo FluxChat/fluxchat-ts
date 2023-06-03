@@ -5,6 +5,27 @@ import { randomUUID } from 'crypto';
 import { Logger } from 'winston';
 import { LoggerFactory } from './logger';
 import { Serializable } from './database';
+import { Node } from './overlay';
+
+class Action {
+  public id: string | null = null;
+  public subid: string | null = null;
+  public is_strong: boolean = false;
+  public valid_until: Date | null = null;
+  public func: any = null;
+
+  public equals(other: Action): boolean {
+    return  this.id === other.id && this.subid === other.subid;
+  }
+}
+
+class Challenge {
+  public min: number | null = null;
+  public max: number | null = null;
+  public data: string | null = null;
+  public proof: string | null = null;
+  public nonce: string | null = null;
+}
 
 export enum ConnectionMode {
   Disconnected,
@@ -42,14 +63,17 @@ export class Client implements Serializable, JsonClient, BaseClient {
   public debug_add?: string;
 
   // Unmapped
-  // TODO: node
+  public node: Node | null = null;
+
+  // Connection
   public conn_mode: ConnectionMode = ConnectionMode.Disconnected;
   public conn_msg: string | null = null;
 
+  // Auth
   public auth: number = 0;
 
-  // TODO: actions
-  // TODO: challenge
+  public actions: Array<Action> = [];
+  public challenge: Challenge | null = null;
 
   private readonly _logger: Logger;
   public socket: TLSSocket | null = null;

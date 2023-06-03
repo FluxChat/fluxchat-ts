@@ -57,15 +57,6 @@ export class Server extends Network {
     this._privateKeyDerivation = passwordKeyDerivation(process.env.FLUXCHAT_KEY_PASSWORD || 'password');
     this._logger.debug('password key derivation done');
 
-    // this._logger.debug('public key file path', this._publicKeyFilePath);
-    // this._publicKey = crypto.createPublicKey(fs.readFileSync(this._publicKeyFilePath));
-
-    // this._logger.debug('private key file path', this._privateKeyFilePath);
-    // this._privateKey = crypto.createPrivateKey({
-    //   key: fs.readFileSync(this._privateKeyFilePath),
-    //   passphrase: this._privateKeyDerivation,
-    // });
-
     // Tasks
     this._tasks.set('debug_clients', setInterval(this._debugClients.bind(this), 10000));
     this._tasks.set('save', setInterval(this.save.bind(this), 60000));
@@ -140,11 +131,12 @@ export class Server extends Network {
 
     let client = new Client();
     client.socket = socket;
+    client.socket.on('ready', this._onClientReady.bind(this, client));
     client.socket.on('data', this._onClientData.bind(this, client));
     client.socket.on('end', this._onClientEnd.bind(this, client));
-    client.socket.on('close', this._onClientClose.bind(this));
-    client.socket.on('error', this._onClientError.bind(this));
-    client.socket.on('timeout', this._onClientTimeout.bind(this));
+    client.socket.on('close', this._onClientClose.bind(this, client));
+    client.socket.on('error', this._onClientError.bind(this, client));
+    client.socket.on('timeout', this._onClientTimeout.bind(this, client));
     this._clients.set(client.uuid, client);
   }
 
@@ -165,9 +157,13 @@ export class Server extends Network {
     this._logger.debug(f('_onClientConnect(%s)', client.uuid));
   }
 
+  private _onClientReady(client: Client): void {
+    this._logger.debug(f('_onClientReady(%s)', client));
+  }
+
   private _onClientData(client: Client, data: Buffer): void {
     this._logger.debug(f('_onClientData(%s)', client));
-    this._logger.debug(f('data: %s', data));
+    this._logger.debug(f('data: %d', data.length));
 
     const commands: Array<Command> = this._parseRaw(data);
     for (let command of commands) {
@@ -177,26 +173,29 @@ export class Server extends Network {
   }
 
   private _onClientEnd(client: Client): void {
-    this._logger.debug(f('_onClientEnd(%s)', client.uuid));
+    this._logger.debug(f('_onClientEnd(%s)', client));
+
     this._clients.delete(client.uuid);
   }
 
-  private _onClientClose(hadError: boolean): void {
-    this._logger.debug(f('_onClientClose(%s)', hadError));
+  private _onClientClose(client: Client, hadError: boolean): void {
+    this._logger.debug(f('_onClientClose(%s, %s)', client, hadError));
+
+    this._clients.delete(client.uuid);
   }
 
-  private _onClientError(error: Error): void {
-    this._logger.error(f('_onClientError(%s)', error.message));
+  private _onClientError(client: Client, error: Error): void {
+    this._logger.error(f('_onClientError(%s, %s)', client, error.message));
   }
 
-  private _onClientTimeout(socket: tls.TLSSocket): void {
-    this._logger.warn(f('_onClientTimeout(%s)', typeof socket));
+  private _onClientTimeout(client: Client, socket: TLSSocket): void {
+    this._logger.warn(f('_onClientTimeout(%s, %s)', client, typeof socket));
   }
 
   private _debugClients(): void {
     this._logger.info(f('_debugClients() -> %d', this._clients.size));
     for (let [c_uuid, client] of this._clients) {
-      this._logger.debug(f('client %s %s', c_uuid, client.uuid));
+      this._logger.debug(f('client %s', c_uuid));
     }
   }
 
@@ -205,11 +204,12 @@ export class Server extends Network {
 
     this._logger.info('getAll()');
     const _entries = this._addressbook.getAll();
+
     this._logger.debug(f('entries %s', _entries.size));
     this._addressbook.getAll().forEach((client: Client, key: string) => {
-      this._logger.debug(f('client %s %s', key, client.uuid));
+      this._logger.debug(f('client %s', client.uuid));
       if (!client.socket) {
-        this._logger.debug(f('client %s %s socket is null', key, client.uuid));
+        this._logger.debug(f('client %s, socket is null', client.uuid));
         this._clientConnect(client);
       }
     });
@@ -228,15 +228,15 @@ export class Server extends Network {
     client.socket.on('ready', this._onClientReady.bind(this, client));
     client.socket.on('data', this._onClientData.bind(this, client));
     client.socket.on('end', this._onClientEnd.bind(this, client));
-    client.socket.on('close', this._onClientClose.bind(this));
-    client.socket.on('error', this._onClientError.bind(this));
-    client.socket.on('timeout', this._onClientTimeout.bind(this));
+    client.socket.on('close', this._onClientClose.bind(this, client));
+    client.socket.on('error', this._onClientError.bind(this, client));
+    client.socket.on('timeout', this._onClientTimeout.bind(this, client));
 
     this._clients.set(client.uuid, client);
   }
 
   protected _clientHandleCommand(client: Client, command: Command): void {
-    this._logger.debug(f('_clientHandleCommand(%s, %s)', client.uuid, command));
+    this._logger.debug(f('_clientHandleCommand(%s, %s)', client, command));
 
     switch (command.group) {
       case 0: // Basic
@@ -316,7 +316,7 @@ export class Server extends Network {
   }
 
   private _clientSendOk(client: ConnectedClient): void {
-    this._logger.debug(f('_clientSendOk(%s)', client.uuid));
+    this._logger.debug(f('_clientSendOk(%s)', client));
 
     const command = new Command(0, 0);
     this._clientSendCommand(client, command);
