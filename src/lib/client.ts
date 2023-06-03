@@ -38,6 +38,15 @@ export enum Direction {
   Outbound,
 }
 
+export enum AuthLevel {
+  NotAuthenticated = 0,
+  SentChallenge = 1,
+  ReceivedChallenge = 2,
+  SentId = 4,
+  ReceivedId = 8,
+  Authenticated = 15,
+}
+
 interface JsonClient {
   address?: string;
   port?: number;
@@ -70,16 +79,17 @@ export class Client implements Serializable, JsonClient, BaseClient {
   public conn_msg: string | null = null;
 
   // Auth
-  public auth: number = 0;
+  public auth: number = AuthLevel.NotAuthenticated;
 
   public actions: Array<Action> = [];
-  public challenge: Challenge | null = null;
+  public challenge: Challenge;
 
   private readonly _logger: Logger;
   public socket: TLSSocket | null = null;
 
   constructor(uuid: string | null = null) {
     this.uuid = uuid || randomUUID();
+    this.challenge = new Challenge();
 
     this._logger = LoggerFactory.getInstance().createLogger('client');
     this._logger.info(f('constructor(%s)', this.uuid));

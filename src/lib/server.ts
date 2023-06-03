@@ -14,7 +14,7 @@ import { passwordKeyDerivation } from './helpers';
 import { Config } from './config';
 import { Command, Network } from './network';
 import { AddressBook } from './address_book';
-import { Client, ConnectedClient } from './client';
+import { AuthLevel, ConnectionMode, Client, ConnectedClient } from './client';
 
 export class Server extends Network {
   private _shutdown: boolean = false;
@@ -254,7 +254,35 @@ export class Server extends Network {
       case 1: // Connection, Authentication, etc
         switch (command.command) {
           case 1: // CHALLENGE command
-            this._logger.debug(f('CHALLENGE command'));
+            this._logger.debug(f('CHALLENGE command: %s', command.args.toString()));
+
+            if ((client.auth & AuthLevel.ReceivedChallenge) != 0) {
+              this._logger.warn(f('client %s already authenticated', client.uuid));
+              break;
+            }
+
+            client.auth |= AuthLevel.ReceivedChallenge;
+
+            client.challenge.min = parseInt(command.args[0]);
+            client.challenge.max = parseInt(command.args[1]);
+            client.challenge.data = command.args[2];
+            console.log(client.challenge);
+
+            if (client.challenge.data.length > 36) {
+              this._logger.warn(f('client %s challenge data too long', client.uuid));
+              client.conn_mode = ConnectionMode.Disconnected;
+              client.conn_msg = 'challenge data too long';
+              break;
+            }
+
+            if (client.challenge.min > this._config.challenge.max) {
+              this._logger.warn(f('client %s challenge min too long: %d > %d', client.uuid, client.challenge.min, this._config.challenge.max));
+              client.conn_mode = ConnectionMode.Disconnected;
+              client.conn_msg = 'challenge min is too big';
+            }
+
+            // TODO Cash here
+
             break;
 
           case 2: // ID command
