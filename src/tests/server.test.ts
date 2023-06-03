@@ -22,6 +22,10 @@ function createConfig(): Config {
     contact: '',
     id: '',
     data_dir: '',
+    challenge: {
+      min: 0,
+      max: 0,
+    },
     log: {
       level: '',
       file: '',
