@@ -239,6 +239,13 @@ export class Server extends Network {
   protected _clientHandleCommand(client: Client, command: Command): void {
     this._logger.debug(f('_clientHandleCommand(%s, %s)', client, command));
 
+    if (command.group >= 2 && client.auth != AuthLevel.Authenticated) {
+      this._logger.warn(f('client %s not authenticated', client.uuid));
+      client.conn_mode = ConnectionMode.Disconnected;
+      client.conn_msg = 'not authenticated';
+      return;
+    }
+
     switch (command.group) {
       case 0: // Basic
         switch (command.command) {
