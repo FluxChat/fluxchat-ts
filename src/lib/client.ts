@@ -6,6 +6,7 @@ import { Logger } from 'winston';
 import { LoggerFactory } from './logger';
 import { Serializable } from './database';
 import { Node } from './overlay';
+import { Cash } from './cash';
 
 class Action {
   public id: string | null = null;
@@ -24,11 +25,12 @@ class Challenge {
   public max: number | null = null;
   public data: string | null = null;
   public proof: string | null = null;
-  public nonce: string | null = null;
+  public nonce: number | null = null;
 }
 
 export enum ConnectionMode {
   Disconnected,
+  Connecting,
   Connected,
   Authenticated,
 }
@@ -57,7 +59,13 @@ export interface BaseClient {
 }
 
 export interface ConnectedClient extends BaseClient {
+  conn_mode: ConnectionMode;
+  conn_msg: string;
+  auth: AuthLevel;
+  cash: Cash | null;
+  challenge: Challenge;
   socket: TLSSocket;
+  reset(): void;
 }
 
 export class Client implements Serializable, JsonClient, BaseClient {
@@ -83,6 +91,7 @@ export class Client implements Serializable, JsonClient, BaseClient {
 
   public actions: Array<Action> = [];
   public challenge: Challenge;
+  public cash: Cash | null = null;
 
   private readonly _logger: Logger;
   public socket: TLSSocket | null = null;
@@ -107,12 +116,22 @@ export class Client implements Serializable, JsonClient, BaseClient {
     };
   }
 
-  fromJSON(data: object, key: string): void {
+  public fromJSON(data: object, key: string): void {
     this._logger.info(f('fromJSON(%s)', key));
     const _mapped = data as JsonClient;
 
     this.uuid = key;
     this.address = _mapped.address;
     this.port = _mapped.port;
+  }
+
+  public reset(): void {
+    this._logger.info(f('reset(%s)', this.uuid));
+    this.conn_mode = ConnectionMode.Disconnected;
+    this.conn_msg = null;
+    this.auth = AuthLevel.NotAuthenticated;
+    this.actions = [];
+    this.challenge = new Challenge();
+    this.cash = null;
   }
 }
