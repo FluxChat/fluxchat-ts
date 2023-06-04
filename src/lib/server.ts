@@ -15,6 +15,7 @@ import { Config } from './config';
 import { Command, Network } from './network';
 import { AddressBook } from './address_book';
 import { AuthLevel, ConnectionMode, Client, ConnectedClient } from './client';
+import { Cash } from './cash';
 
 export class Server extends Network {
   private _shutdown: boolean = false;
@@ -281,7 +282,12 @@ export class Server extends Network {
               client.conn_msg = 'challenge min is too big';
             }
 
-            // TODO Cash here
+            const challengeData = Buffer.from(client.challenge.data);
+            const cash = new Cash(challengeData, client.challenge.min);
+
+            this._logger.debug(f('mine cash: %s', cash));
+            const cycles = cash.mine();
+            this._logger.debug(f('mine done: %d', cycles));
 
             break;
 
