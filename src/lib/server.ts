@@ -15,8 +15,10 @@ import { passwordKeyDerivation } from './helpers';
 import { Config } from './config';
 import { Command, Network } from './network';
 import { AddressBook } from './address_book';
-import { AuthLevel, ConnectionMode, Client, ConnectedClient } from './client';
+import { AuthLevel, ConnectionMode, Direction, Client, ConnectedClient } from './client';
 import { Cash } from './cash';
+import { Contact } from './contact';
+import { cli } from 'winston/lib/winston/config';
 
 const VERSION = 1;
 
@@ -209,7 +211,7 @@ export class Server extends Network {
   private _debugClients(): void {
     this._logger.info(f('_debugClients() -> %d', this._clients.size));
     for (let [c_uuid, client] of this._clients) {
-      this._logger.debug(f('client %s', c_uuid));
+      this._logger.debug(f('debug client %s', c_uuid));
     }
   }
 
@@ -217,22 +219,25 @@ export class Server extends Network {
     // this._logger.info('_handleClients()');
 
     for (let [c_uuid, client] of this._clients) {
-      this._logger.debug(f('client %s', c_uuid));
+      // this._logger.debug(f('handle client %s', c_uuid));
 
       switch (client.conn_mode) {
         case ConnectionMode.Disconnected:
-          this._logger.debug(f('client %s, disconnected', c_uuid));
+          this._logger.debug(f('handle client %s, disconnected: %s', c_uuid, client.conn_msg));
+
           this._clients.delete(client.uuid);
           client.socket?.destroy();
           client.reset();
           break;
 
         case ConnectionMode.Connecting:
-          this._logger.debug(f('client %s, connecting', c_uuid));
+          this._logger.debug(f('handle client %s, connecting', c_uuid));
           break;
 
         case ConnectionMode.Connected:
-          if ((client.auth & AuthLevel.Authenticated) == 0) {
+          this._logger.debug(f('handle client, auth: %d', client.auth));
+
+          if ((client.auth & AuthLevel.SentChallenge) == 0) {
             this._logger.debug(f('send CHALLENGE to client %s', c_uuid));
 
             const challenge = randomUUID();
@@ -264,7 +269,11 @@ export class Server extends Network {
           break;
 
         case ConnectionMode.Authenticated:
+          // this._logger.debug(f('handle client %s, authenticated', c_uuid));
           break;
+
+        default:
+          this._logger.warn(f('handle client %s, unknown connection mode %d', c_uuid, client.conn_mode));
       }
     }
   }
@@ -304,6 +313,7 @@ export class Server extends Network {
     const connectedClient = client as ConnectedClient;
 
     client.conn_mode = ConnectionMode.Connecting;
+    client.dir_mode = Direction.Outbound;
 
     client.socket = tlsConnect(options, this._onClientConnect.bind(this, client));
     client.socket.on('ready', this._onClientReady.bind(this, client));
@@ -351,9 +361,9 @@ export class Server extends Network {
 
             client.auth |= AuthLevel.ReceivedChallenge;
 
-            client.challenge.min = parseInt(command.args[0]);
-            client.challenge.max = parseInt(command.args[1]);
-            client.challenge.data = command.args[2];
+            client.challenge.min = command.asInt(0);
+            client.challenge.max = command.asInt(1);
+            client.challenge.data = command.asString(2);
             console.log(client.challenge);
 
             if (client.challenge.data.length > 36) {
@@ -375,6 +385,11 @@ export class Server extends Network {
             this._logger.debug(f('mine cash: %s', cash));
             const cycles = cash.mine();
             this._logger.debug(f('mine done: %d', cycles));
+            this._logger.debug(f('proof: %s', cash.proof));
+            this._logger.debug(f('nonce: %s', cash.nonce));
+
+            client.challenge.proof = cash.proof;
+            client.challenge.nonce = cash.nonce;
 
             break;
 
@@ -391,16 +406,15 @@ export class Server extends Network {
               break;
             }
 
-            const [
-              cVersion_s,
-              cId,
-              cProof, cNonce_s,
-            ] = command.args;
-            const cVersion = parseInt(cVersion_s);
-            const cNonce = parseInt(cNonce_s);
+            const cVersion = command.asInt(0);
+            const cId = command.asString(1);
+            const cContact = command.asString(2);
+            const cProof = command.asString(3);
+            const cNonce = command.asInt(4);
 
             this._logger.debug(f('client version: %s', cVersion));
             this._logger.debug(f('client id: %s', cId));
+            this._logger.debug(f('client contact: %s', cContact));
             this._logger.debug(f('client proof: %s', cProof));
             this._logger.debug(f('client nonce: %s', cNonce));
 
@@ -419,7 +433,27 @@ export class Server extends Network {
               client.conn_msg = 'cash is null';
               break;
             }
-            if (!client.cash.verify(cProof, cNonce)) {}
+            if (!client.cash.verify(cProof, cNonce)) {
+              this._logger.warn(f('client %s cash verify failed', client.uuid));
+              client.conn_mode = ConnectionMode.Disconnected;
+              client.conn_msg = 'cash verify failed';
+              break;
+            }
+
+            // Contact
+            const contact = Contact.resolve(cContact);
+
+            switch (client.dir_mode) {
+              case Direction.Inbound:
+                this._logger.debug(f('client %s, inbound', client.uuid));
+                break;
+
+              case Direction.Outbound:
+                this._logger.debug(f('client %s, outbound', client.uuid));
+                break;
+            }
+
+            client.auth |= AuthLevel.ReceivedId;
 
             break;
 
@@ -472,9 +506,11 @@ export class Server extends Network {
     this._logger.debug(f('_clientSendCommand(%s, %s)', client.uuid, command));
 
     const data = this._serializeCommand(command);
-    this._logger.debug(f('data %s', data));
+    this._logger.debug(f('data', data));
+    this._logger.debug(f('data hex: %s', data.toString('hex')));
+    this._logger.debug(f('data str: "%s"', data.toString()));
 
-    this._logger.debug(f('write socket', data));
+    this._logger.debug(f('write socket: %d', data.length));
     client.socket.write(data);
   }
 
@@ -489,22 +525,22 @@ export class Server extends Network {
     this._logger.debug(f('_clientSendChallenge(%s, %s)', client, challenge));
 
     const command = new Command(1, 1, [
-      this._config.challenge.min.toString(),
-      this._config.challenge.max.toString(),
+      this._config.challenge.min,
+      this._config.challenge.max,
       challenge,
     ]);
     this._clientSendCommand(client, command);
   }
 
-  // TODO
   private _clientSendId(client: ConnectedClient, proof: string, nonce: number): void {
     this._logger.debug(f('_clientSendId(%s, %s, %d)', client, proof, nonce));
 
     const command = new Command(1, 2, [
-      // VERSION, // TODO
+      VERSION,
       this._config.id,
+      this._config.contact,
       proof,
-      // nonce, // TODO
+      nonce,
     ]);
     this._clientSendCommand(client, command);
   }

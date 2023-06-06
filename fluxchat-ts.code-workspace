@@ -20,6 +20,18 @@
                 },
                 "group": "build"
             }, {
+                "label": "Build Debug",
+                "command": "npm run build-debug",
+                "type": "shell",
+                "args": [],
+                "problemMatcher": [
+                    "$tsc"
+                ],
+                "presentation": {
+                    "reveal": "silent"
+                },
+                "group": "build"
+            }, {
                 "label": "Tests",
                 "command": "./bin/tests.sh",
                 "type": "shell",
@@ -43,9 +55,9 @@
                 ],
                 "sourceMaps": true,
                 "program": "${file}",
-                "preLaunchTask": "Build",
+                "preLaunchTask": "Build Debug",
                 "outFiles": [
-                    "${workspaceFolder}/build/**/*.js"
+                    "${workspaceFolder}/build-debug/**/*.js"
                 ],
                 "console": "internalConsole",
                 "outputCapture": "std"
@@ -57,10 +69,10 @@
                     "<node_internals>/**"
                 ],
                 "sourceMaps": true,
-                "program": "./build/src/app/server_app.js",
-                "preLaunchTask": "Build",
+                "program": "./build-debug/src/app/server_app.js",
+                "preLaunchTask": "Build Debug",
                 "outFiles": [
-                    "${workspaceFolder}/build/**/*.js"
+                    "${workspaceFolder}/build-debug/**/*.js"
                 ],
                 "console": "internalConsole",
                 "outputCapture": "std"
@@ -75,7 +87,7 @@
                 "port": 9229,
                 "sourceMaps": true,
                 "outFiles": [
-                    "${workspaceFolder}/build/**/*.js"
+                    "${workspaceFolder}/build-debug/**/*.js"
                 ],
                 "localRoot": "${workspaceFolder}",
                 "remoteRoot": "${workspaceFolder}",

@@ -28,68 +28,140 @@ export function isIPv6Enabled(): boolean {
   return false;
 }
 
+export class Argument {
+  public readonly length: number = 0;
+
+  constructor(
+    public readonly value: string | number,
+  ) {
+    switch (typeof value) {
+      case 'string':
+        this.length = value.length;
+        break;
+
+      case 'number':
+        this.length = 4;
+        break;
+    }
+  }
+
+  public asInt(): number {
+    switch (typeof this.value) {
+      case 'string':
+        const buf = Buffer.alloc(4);
+        buf.write(this.value);
+        return buf.readUInt32LE();
+
+      case 'number':
+        return this.value;
+    }
+  }
+
+  public asBytes(): Buffer {
+    switch (typeof this.value) {
+      case 'string':
+        return Buffer.from(this.value);
+
+      case 'number':
+        const buf = Buffer.alloc(4);
+        buf.writeUInt32LE(this.value);
+        return buf;
+    }
+  }
+}
+
 export class Command {
+  public readonly args: Array<Argument> = [];
+
   constructor(
     public readonly group: number = 0,
     public readonly command: number = 0,
-    public readonly args: Array<string> = [],
+    data: Array<string | number> = [],
   ) {
+    this.args = data.map((item: string | number) => new Argument(item));
+  }
+
+  public asInt(index: number): number {
+    const arg = this.args[index];
+    if (arg === undefined) {
+      throw new Error(`Argument ${index} is undefined`);
+    }
+
+    return arg.asInt();
+  }
+
+  public asBytes(index: number): Buffer {
+    const arg = this.args[index];
+    if (arg === undefined) {
+      throw new Error(`Argument ${index} is undefined`);
+    }
+
+    return arg.asBytes();
+  }
+
+  public asString(index: number): string {
+    const arg = this.args[index];
+    if (arg === undefined) {
+      throw new Error(`Argument ${index} is undefined`);
+    }
+
+    return arg.asBytes().toString();
   }
 }
 
 export abstract class Network {
   protected _parseRaw(data: Buffer): Array<Command> {
-    // console.log('length', data.length);
-    // console.log('data', data);
-
     let commands: Array<Command> = [];
+
+    // console.log('data', data.length, data);
 
     let pos = 0;
     while (pos < data.length) {
+      // console.log('pos', pos);
+
       const flags_i: number = data[pos];
+      // console.log('flags_i', flags_i);
 
-      const flag_lengths_are_4_bytes = (flags_i & 0x01) === 0x01;
-      const arg_size_len = flag_lengths_are_4_bytes ? 4 : 1;
-
-      const payload_len_i: number = data.subarray(pos + 3, pos + 7).readUInt32LE();
+      const flagLengthsAreFourBytes = (flags_i & 0x01) === 0x01;
+      const argSizeLen = flagLengthsAreFourBytes ? 4 : 1;
+      const payloadLen_i: number = data.subarray(pos + 3, pos + 7).readUInt32LE();
       const command = new Command(data[pos + 1], data[pos + 2]);
 
-      // console.log('flags_i', flags_i);
-      // console.log('flag_lengths_are_4_bytes', flag_lengths_are_4_bytes);
-      // console.log('group', command.group);
-      // console.log('command', command.command);
-      // console.log('payload_len_i', payload_len_i);
+      // console.log('flagLengthsAreFourBytes', flagLengthsAreFourBytes);
+      // console.log('argSizeLen', argSizeLen);
+      // console.log('payloadLen_i', payloadLen_i);
+      // console.log('command', command);
 
-      if (payload_len_i > 0) {
-        const payload_b: Buffer = data.subarray(pos + 7, pos + 7 + payload_len_i);
+      if (payloadLen_i > 0) {
+        const payload_b: Buffer = data.subarray(pos + 7, pos + 7 + payloadLen_i);
         // console.log('payload_b', payload_b);
 
-        let payload_pos = 0;
-        while (payload_pos < payload_len_i) {
-          const arg_len_b: Buffer = payload_b.subarray(payload_pos, payload_pos + arg_size_len);
-          // console.log('arg_len_b', arg_len_b);
+        let payloadPos = 0;
+        while (payloadPos < payloadLen_i) {
+          // console.log('payloadPos', payloadPos);
 
-          const arg_len_i: number = flag_lengths_are_4_bytes ? arg_len_b.readUInt32LE() : arg_len_b.readUInt8();
-          // console.log('arg_len_i', arg_len_i);
+          const argLen_b: Buffer = payload_b.subarray(payloadPos, payloadPos + argSizeLen);
+          const argLen_i: number = flagLengthsAreFourBytes ? argLen_b.readUInt32LE() : argLen_b.readUInt8();
 
-          const arg_val: string  = payload_b.subarray(payload_pos + arg_size_len, payload_pos + arg_size_len + arg_len_i).toString();
-          // console.log('arg_val', arg_val, arg_val.length);
-          assert.equal(arg_len_i, arg_val.length);
+          // console.log('argLen_b', argLen_b);
+          // console.log('argLen_i', argLen_i);
 
-          payload_pos += arg_len_i + arg_size_len;
-          // console.log('payload_pos', payload_pos);
+          const argVal: string  = payload_b.subarray(payloadPos + argSizeLen, payloadPos + argSizeLen + argLen_i).toString();
+          assert.equal(argLen_i, argVal.length);
 
-          command.args.push(arg_val);
+          // console.log('argVal', argVal.length, argVal);
+
+          payloadPos += argLen_i + argSizeLen;
+          // console.log('payloadPos', payloadPos);
+
+          command.args.push(new Argument(argVal));
         }
       }
 
       commands.push(command);
 
-      pos += 1 + 1 + 1 + 4 + payload_len_i + 1;
-      // console.log('pos', pos);
+      pos += 1 + 1 + 1 + 4 + payloadLen_i + 1;
     }
-
-    // console.log('commands', commands.length);
 
     return commands;
   }
@@ -98,11 +170,15 @@ export abstract class Network {
     // console.log('command', command);
 
     // Flags
-    const flag_lengths_are_4_bytes = command.args.map(i => i.length).find(i => i > 0xff) !== undefined;
-    const flags_i = 0x00 | (flag_lengths_are_4_bytes ? 0x01 : 0x00);
+    const flagLengthsAreFourBytes = command
+      .args
+      .map((item: Argument) => item.length)
+      .find((l: number) => l > 0xff) !== undefined;
+
+    const flags_i = 0x00 | (flagLengthsAreFourBytes ? 0x01 : 0x00);
     const flags_b = Buffer.alloc(1);
     flags_b.writeUInt8(flags_i);
-    const arg_size_len = flag_lengths_are_4_bytes ? 4 : 1;
+    const argSizeLen = flagLengthsAreFourBytes ? 4 : 1;
 
     // Group
     const group_b = Buffer.alloc(1);
@@ -113,24 +189,38 @@ export abstract class Network {
     command_b.writeUInt8(command.command);
 
     // Payload
-    let payload_len_i = 0;
+    let payloadLen_i = 0;
     let payload = Buffer.alloc(0);
     for (let arg of command.args) {
-      payload_len_i += arg_size_len + arg.length;
+      payloadLen_i += argSizeLen + arg.length;
 
-      const arg_len_b = Buffer.alloc(arg_size_len);
-      if (flag_lengths_are_4_bytes) {
-        arg_len_b.writeUInt32LE(arg.length);
+      const argLen_b = Buffer.alloc(argSizeLen);
+      if (flagLengthsAreFourBytes) {
+        argLen_b.writeUInt32LE(arg.length);
       } else {
-        arg_len_b.writeUInt8(arg.length);
+        argLen_b.writeUInt8(arg.length);
       }
 
-      const arg_b = Buffer.from(arg);
-      payload = Buffer.concat([payload, arg_len_b, arg_b]);
+      let arg_b: Buffer;
+      switch (typeof arg.value) {
+        case 'string':
+          arg_b = Buffer.from(arg.value);
+          break;
+
+        case 'number':
+          arg_b = Buffer.alloc(4);
+          arg_b.writeUInt32LE(arg.value);
+          break;
+
+        default:
+          throw new Error(`Unknown type ${typeof arg.value}`);
+      }
+
+      payload = Buffer.concat([payload, argLen_b, arg_b]);
     }
 
-    const payload_len_b = Buffer.alloc(4);
-    payload_len_b.writeUInt32LE(payload_len_i);
+    const payloadLen_b = Buffer.alloc(4);
+    payloadLen_b.writeUInt32LE(payloadLen_i);
 
     // End
     const delemiter_b = Buffer.alloc(1);
@@ -139,7 +229,7 @@ export abstract class Network {
     return Buffer.concat([
       flags_b,
       group_b, command_b,
-      payload_len_b, payload,
+      payloadLen_b, payload,
       delemiter_b,
     ]);
   }

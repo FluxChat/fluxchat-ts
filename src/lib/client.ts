@@ -36,6 +36,7 @@ export enum ConnectionMode {
 }
 
 export enum Direction {
+  Unknown,
   Inbound,
   Outbound,
 }
@@ -52,15 +53,22 @@ export enum AuthLevel {
 interface JsonClient {
   address?: string;
   port?: number;
+  id?: string;
+  seen_at?: Date;
+  meetings?: number;
+  is_bootstrap?: boolean;
+  is_trusted?: boolean;
+  debug_add?: string;
 }
 
-export interface BaseClient {
+interface BaseClient {
   uuid: string;
 }
 
 export interface ConnectedClient extends BaseClient {
   conn_mode: ConnectionMode;
   conn_msg: string;
+  dir_mode: Direction;
   auth: AuthLevel;
   cash: Cash | null;
   challenge: Challenge;
@@ -86,6 +94,9 @@ export class Client implements Serializable, JsonClient, BaseClient {
   public conn_mode: ConnectionMode = ConnectionMode.Disconnected;
   public conn_msg: string | null = null;
 
+  // Direction
+  public dir_mode: Direction = Direction.Unknown;
+
   // Auth
   public auth: number = AuthLevel.NotAuthenticated;
 
@@ -109,24 +120,39 @@ export class Client implements Serializable, JsonClient, BaseClient {
   }
 
   public toJSON(): object {
+    this._logger.info(f('toJSON(%s)', this.uuid));
+
     return {
-      // uuid: this.uuid,
       address: this.address,
       port: this.port,
+      id: this.id,
+      seen_at: this.seen_at,
+      meetings: this.meetings,
+      is_bootstrap: this.is_bootstrap,
+      is_trusted: this.is_trusted,
+      debug_add: this.debug_add,
     };
   }
 
   public fromJSON(data: object, key: string): void {
     this._logger.info(f('fromJSON(%s)', key));
+
     const _mapped = data as JsonClient;
 
     this.uuid = key;
     this.address = _mapped.address;
     this.port = _mapped.port;
+    this.id = _mapped.id;
+    this.seen_at = _mapped.seen_at;
+    this.meetings = _mapped.meetings;
+    this.is_bootstrap = _mapped.is_bootstrap;
+    this.is_trusted = _mapped.is_trusted;
+    this.debug_add = _mapped.debug_add;
   }
 
   public reset(): void {
     this._logger.info(f('reset(%s)', this.uuid));
+
     this.conn_mode = ConnectionMode.Disconnected;
     this.conn_msg = null;
     this.auth = AuthLevel.NotAuthenticated;

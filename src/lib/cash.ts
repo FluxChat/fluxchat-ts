@@ -21,7 +21,7 @@ export class Cash {
     while (true) {
       cycle += 1;
 
-      const input_data = Buffer.concat([
+      const inputData = Buffer.concat([
         Buffer.from('FC:'),
         Buffer.from(this.bits.toString()),
         Buffer.from(':'),
@@ -31,51 +31,51 @@ export class Cash {
       ]);
 
       const hash = createHash('sha256');
-      const digest = hash.update(input_data).digest();
+      const digest = hash.update(inputData).digest();
 
-      let found_bits = 0;
+      let foundBits = 0;
       for (const c of digest) {
         if (c & 0b10000000) {
           break;
         }
         if (c & 0b01000000) {
-          found_bits += 1;
+          foundBits += 1;
           break;
         }
         if (c & 0b00100000) {
-          found_bits += 2;
+          foundBits += 2;
           break;
         }
         if (c & 0b00010000) {
-          found_bits += 3;
+          foundBits += 3;
           break;
         }
         if (c & 0b00001000) {
-          found_bits += 4;
+          foundBits += 4;
           break;
         }
         if (c & 0b00000100) {
-          found_bits += 5;
+          foundBits += 5;
           break;
         }
         if (c & 0b00000010) {
-          found_bits += 6;
+          foundBits += 6;
           break;
         }
         if (c & 0b00000001) {
-          found_bits += 7;
+          foundBits += 7;
           break;
         }
         if (c === 0) {
-          found_bits += 8;
+          foundBits += 8;
         }
 
-        if (found_bits >= this.bits) {
+        if (foundBits >= this.bits) {
           break;
         }
       }
 
-      if (found_bits >= this.bits) {
+      if (foundBits >= this.bits) {
         this.proof = digest.toString('hex');
         break;
       }
@@ -97,24 +97,24 @@ export class Cash {
         return false;
       }
     } else {
-      let found_bits = 0;
+      let foundBits = 0;
       for (const c of Buffer.from(proof, 'hex')) {
         const pos = c.toString(2).padStart(8, '0').indexOf('1');
         if (pos === -1) {
-          found_bits += 8;
+          foundBits += 8;
           continue;
         }
 
-        found_bits += pos;
+        foundBits += pos;
         break;
       }
 
-      if (found_bits < this.bits) {
+      if (foundBits < this.bits) {
         return false;
       }
     }
 
-    const input_data = Buffer.concat([
+    const inputData = Buffer.concat([
       Buffer.from('FC:'),
       Buffer.from(this.bits.toString()),
       Buffer.from(':'),
@@ -124,8 +124,13 @@ export class Cash {
     ]);
 
     const hash = createHash('sha256');
-    const digest = hash.update(input_data).digest().toString('hex');
+    const digest1 = hash.update(inputData.toString()).digest().toString('hex');
+    console.log('digest1', digest1);
 
-    return digest === proof;
+    const hash2 = createHash('sha256');
+    const digest2 = hash2.update(inputData).digest().toString('hex');
+    console.log('digest2', digest2);
+
+    return digest1 === proof;
   }
 }

@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsc --watch",
     "build": "tsc --build --verbose",
-    "start": "node build/src/app/Server.js",
+    "build-debug": "tsc --outDir ./build-debug --sourceMap",
+    "start": "node build/src/app/server_app.js",
     "test": "jest"
   },
   "homepage": "https://fluxchat.dev/",
