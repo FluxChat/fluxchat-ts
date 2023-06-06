@@ -6,6 +6,7 @@ import { LoggerFactory } from './logger';
 import { Client } from './client';
 import { Database } from './database';
 import { Contact } from './contact';
+import { Node } from './overlay';
 
 export class AddressBook extends Database<string, Client> {
   private readonly _logger: Logger;
@@ -52,5 +53,31 @@ export class AddressBook extends Database<string, Client> {
     this._logger.debug(f('addClient(%s)', client));
 
     this.add(client.uuid, client);
+  }
+
+  public getNearestTo(node: Node, limit: number = 20, withContactInfos: boolean | null = null): Array<Client> {
+
+    const sorted = [...this._data.values()]
+      .filter((client: Client): boolean => {
+        return client.node !== null;
+      })
+      .sort((a: Client, b: Client): number => {
+        const aNode = a.node as Node;
+        const bNode = b.node as Node;
+
+        const aDistance = aNode.distance(node);
+        const bDistance = bNode.distance(node);
+
+        return aDistance.distance - bDistance.distance;
+      })
+      .slice(0, limit);
+
+    if (withContactInfos !== null) {
+      //TODO
+      if (withContactInfos) {}
+      else {}
+    }
+
+    return [];
   }
 }

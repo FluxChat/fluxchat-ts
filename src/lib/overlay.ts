@@ -76,6 +76,10 @@ export class Distance {
     }
   }
 
+  public get distance(): number {
+    return this._distance;
+  }
+
   public toString(): string {
     // console.log('Distance.toString()');
     return `Distance(${this._distance})`;

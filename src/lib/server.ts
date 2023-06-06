@@ -18,7 +18,7 @@ import { AddressBook } from './address_book';
 import { AuthLevel, ConnectionMode, Direction, Client, ConnectedClient } from './client';
 import { Cash } from './cash';
 import { Contact } from './contact';
-import { cli } from 'winston/lib/winston/config';
+import { Node } from './overlay';
 
 const VERSION = 1;
 
@@ -472,6 +472,18 @@ export class Server extends Network {
         switch (command.command) {
           case 1: // GET_NEAREST_TO command
             this._logger.debug(f('GET_NEAREST_TO command'));
+
+            const cNode = Node.parse(command.asString(0));
+
+            this._logger.debug(f('node: %s', cNode));
+
+            const clients = this._addressbook.getNearestTo(cNode, 20, true);
+            const clientIds = clients.map((client: Client): string => {
+              return `${client.uuid}:${client.address}:${client.port}`;
+            });
+
+            this._clientSendGetNearestToResponse(client, clientIds);
+
             break;
 
           case 2: // GET_NEAREST_TO RESPONSE command
@@ -556,6 +568,13 @@ export class Server extends Network {
     this._logger.debug(f('_clientSendPong(%s)', client));
 
     const command = new Command(1, 4);
+    this._clientSendCommand(client, command);
+  }
+
+  private _clientSendGetNearestToResponse(client: ConnectedClient, clientIds: Array<string>): void {
+    this._logger.debug(f('_clientSendGetNearestTo(%s, %s)', client, clientIds));
+
+    const command = new Command(2, 1, clientIds);
     this._clientSendCommand(client, command);
   }
 }

@@ -160,4 +160,8 @@ export class Client implements Serializable, JsonClient, BaseClient {
     this.challenge = new Challenge();
     this.cash = null;
   }
+
+  public hasContact(): boolean {
+    return this.address !== undefined && this.port !== undefined;
+  }
 }
