@@ -35,7 +35,7 @@ export class Server extends Network {
 
   private _addressbook: AddressBook;
   private _localNode: Node;
-  private _main_server: TLSServer | null = null;
+  private _server: TLSServer | null = null;
   private _clients: Map<string, ConnectedClient> = new Map<string, ConnectedClient>();
   private _tasks: Map<string, NodeJS.Timeout> = new Map<string, NodeJS.Timeout>();
 
@@ -86,12 +86,12 @@ export class Server extends Network {
       }],
       cert: readFileSync(this._certificateFilePath),
     };
-    this._main_server = createTlsServer(options, this._onMainServerConnection.bind(this));
+    this._server = createTlsServer(options, this._onServerConnection.bind(this));
 
-    this._main_server.listen(this._config.port, this._config.address, this._onMainServerListen.bind(this));
-    this._main_server.on('close', this._onMainServerClose.bind(this));
-    this._main_server.on('error', this._onMainServerError.bind(this));
-    this._main_server.on('drop', this._onMainServerDrop.bind(this));
+    this._server.listen(this._config.port, this._config.address, this._onServerListen.bind(this));
+    this._server.on('close', this._onServerClose.bind(this));
+    this._server.on('error', this._onServerError.bind(this));
+    this._server.on('drop', this._onServerDrop.bind(this));
   }
 
   public save(): void {
@@ -118,18 +118,18 @@ export class Server extends Network {
       client.socket.destroy();
     }
 
-    if (this._main_server) {
+    if (this._server) {
       this._logger.info('shutdown TLS server');
-      this._main_server.close();
-      this._main_server = null;
+      this._server.close();
+      this._server = null;
     }
   }
 
-  private _onMainServerListen(): void {
+  private _onServerListen(): void {
     this._logger.debug('_onListen()');
   }
 
-  private _onMainServerConnection(socket: TLSSocket): void {
+  private _onServerConnection(socket: TLSSocket): void {
     this._logger.info('_onConnection()');
 
     this._logger.debug(f('address %s', socket.address()));
@@ -155,17 +155,17 @@ export class Server extends Network {
     this._clients.set(client.uuid, connectedClient);
   }
 
-  private _onMainServerClose(): void {
-    this._logger.debug('_onMainServerClose()');
+  private _onServerClose(): void {
+    this._logger.debug('_onServerClose()');
   }
 
-  private _onMainServerError(error: Error): void {
-    this._logger.error(f('_onMainServerError() %s', error.message));
+  private _onServerError(error: Error): void {
+    this._logger.error(f('_onServerError() %s', error.message));
     this.shutdown(error.message);
   }
 
-  private _onMainServerDrop(socket: any): void {
-    this._logger.debug(f('_onMainServerDrop(%s) %s:%d', typeof socket, socket.remoteAddress, socket.remotePort));
+  private _onServerDrop(socket: any): void {
+    this._logger.debug(f('_onServerDrop(%s) %s:%d', typeof socket, socket.remoteAddress, socket.remotePort));
   }
 
   private _onClientConnect(client: Client): void {
