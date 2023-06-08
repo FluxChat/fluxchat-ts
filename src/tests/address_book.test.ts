@@ -4,7 +4,7 @@ import { Client } from '../lib/client';
 import { AddressBook } from '../lib/address_book';
 
 describe('AddressBook', () => {
-  test('save_load', () => {
+  test('save and load', () => {
     const client1 = new Client('uuid1');
     client1.address = 'address1';
     client1.port = 1234;

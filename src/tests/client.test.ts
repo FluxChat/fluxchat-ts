@@ -3,7 +3,7 @@ import { describe, expect, jest, test, it } from '@jest/globals';
 import { Client } from '../lib/client';
 
 describe('Client', () => {
-  test('toString', () => {
+  test('to string', () => {
     const client = new Client('uuid1');
     client.address = 'address1';
     client.port = 1234;

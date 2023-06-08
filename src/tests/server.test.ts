@@ -49,7 +49,7 @@ describe('Server', () => {
     expect(server).not.toBeNull();
   });
 
-  test('clientReadRaw', () => {
+  test('client read raw', () => {
     const config = createConfig();
     const server = new TestServer(config);
 
@@ -133,7 +133,7 @@ describe('Server', () => {
     }
   });
 
-  test('serializeCommand', () => {
+  test('serialize command', () => {
     const config = createConfig();
     const server = new TestServer(config);
 
