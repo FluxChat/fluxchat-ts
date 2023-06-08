@@ -22,7 +22,7 @@ async function runTestData(data: TestArray): Promise<void> {
 
     const actual = await Contact.resolve(contact_s, raddr);
 
-    expect(actual.addr).toEqual(expected.addr);
+    expect(actual.address).toEqual(expected.addr);
     expect(actual.port).toEqual(expected.port);
     expect(actual.is_valid).toEqual(expected.is_valid);
   }

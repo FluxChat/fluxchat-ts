@@ -46,6 +46,12 @@ export abstract class Database<K extends KeyType, T extends Serializable> {
       this._data = defaultData;
       this._changed = true;
     }
+
+    this.postLoad();
+  }
+
+  protected postLoad(): void {
+    this._plogger.debug('postLoad()');
   }
 
   public save(): void {
@@ -92,5 +98,10 @@ export abstract class Database<K extends KeyType, T extends Serializable> {
   public getAll(): Map<K, T> {
     this._plogger.debug('getAll()');
     return this._data;
+  }
+
+  public changed(): void {
+    this._plogger.debug('changed()');
+    this._changed = true;
   }
 }

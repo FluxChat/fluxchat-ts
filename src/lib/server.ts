@@ -8,6 +8,7 @@ import {
 import { randomUUID } from 'crypto';
 import { readFileSync } from 'fs';
 import { join as pjoin } from 'path';
+import { AddressInfo } from 'net';
 import { Logger } from 'winston';
 import { LoggerFactory } from './logger';
 import { format as f } from 'util';
@@ -33,6 +34,7 @@ export class Server extends Network {
   private readonly _addressbookBootstrapFilePath: string;
 
   private _addressbook: AddressBook;
+  private _localNode: Node;
   private _main_server: TLSServer | null = null;
   private _clients: Map<string, ConnectedClient> = new Map<string, ConnectedClient>();
   private _tasks: Map<string, NodeJS.Timeout> = new Map<string, NodeJS.Timeout>();
@@ -54,6 +56,7 @@ export class Server extends Network {
     this._logger.debug('address book file path', this._addressbookFilePath);
     this._addressbookBootstrapFilePath = pjoin(this._config.data_dir, 'bootstrap.json');
     this._addressbook = new AddressBook(this._addressbookFilePath);
+    this._localNode = Node.parse(this._config.id);
   }
 
   public start(): void {
@@ -140,7 +143,7 @@ export class Server extends Network {
     const client = new Client();
     const connectedClient = client as ConnectedClient;
 
-    client.conn_mode = ConnectionMode.Connected;
+    client.connMode = ConnectionMode.Connected;
     client.socket = socket;
     client.socket.on('ready', this._onClientReady.bind(this, client));
     client.socket.on('data', this._onClientData.bind(this, connectedClient));
@@ -172,7 +175,7 @@ export class Server extends Network {
   private _onClientReady(client: Client): void {
     this._logger.debug(f('_onClientReady(%s)', client));
 
-    client.conn_mode = ConnectionMode.Connected;
+    client.connMode = ConnectionMode.Connected;
   }
 
   private _onClientData(client: ConnectedClient, data: Buffer): void {
@@ -221,9 +224,9 @@ export class Server extends Network {
     for (let [c_uuid, client] of this._clients) {
       // this._logger.debug(f('handle client %s', c_uuid));
 
-      switch (client.conn_mode) {
+      switch (client.connMode) {
         case ConnectionMode.Disconnected:
-          this._logger.debug(f('handle client %s, disconnected: %s', c_uuid, client.conn_msg));
+          this._logger.debug(f('handle client %s, disconnected: %s', c_uuid, client.connMsg));
 
           this._clients.delete(client.uuid);
           client.socket?.destroy();
@@ -261,7 +264,7 @@ export class Server extends Network {
           else if (client.auth == AuthLevel.Authenticated) {
             this._logger.debug(f('client %s, authenticated', c_uuid));
 
-            client.conn_mode = ConnectionMode.Authenticated;
+            client.connMode = ConnectionMode.Authenticated;
           }
 
           // TODO: check for timeout
@@ -273,7 +276,7 @@ export class Server extends Network {
           break;
 
         default:
-          this._logger.warn(f('handle client %s, unknown connection mode %d', c_uuid, client.conn_mode));
+          this._logger.warn(f('handle client %s, unknown connection mode %d', c_uuid, client.connMode));
       }
     }
   }
@@ -312,8 +315,8 @@ export class Server extends Network {
 
     const connectedClient = client as ConnectedClient;
 
-    client.conn_mode = ConnectionMode.Connecting;
-    client.dir_mode = Direction.Outbound;
+    client.connMode = ConnectionMode.Connecting;
+    client.dirMode = Direction.Outbound;
 
     client.socket = tlsConnect(options, this._onClientConnect.bind(this, client));
     client.socket.on('ready', this._onClientReady.bind(this, client));
@@ -326,13 +329,13 @@ export class Server extends Network {
     this._clients.set(client.uuid, connectedClient);
   }
 
-  protected _clientHandleCommand(client: ConnectedClient, command: Command): void {
+  protected async _clientHandleCommand(client: ConnectedClient, command: Command): Promise<void> {
     this._logger.debug(f('_clientHandleCommand(%s, %s)', client, command));
 
     if (command.group >= 2 && client.auth != AuthLevel.Authenticated) {
       this._logger.warn(f('client %s not authenticated', client.uuid));
-      client.conn_mode = ConnectionMode.Disconnected;
-      client.conn_msg = 'not authenticated';
+      client.connMode = ConnectionMode.Disconnected;
+      client.connMsg = 'not authenticated';
       return;
     }
 
@@ -368,15 +371,15 @@ export class Server extends Network {
 
             if (client.challenge.data.length > 36) {
               this._logger.warn(f('client %s challenge data too long', client.uuid));
-              client.conn_mode = ConnectionMode.Disconnected;
-              client.conn_msg = 'challenge data too long';
+              client.connMode = ConnectionMode.Disconnected;
+              client.connMsg = 'challenge data too long';
               break;
             }
 
             if (client.challenge.min > this._config.challenge.max) {
               this._logger.warn(f('client %s challenge min too long: %d > %d', client.uuid, client.challenge.min, this._config.challenge.max));
-              client.conn_mode = ConnectionMode.Disconnected;
-              client.conn_msg = 'challenge min is too big';
+              client.connMode = ConnectionMode.Disconnected;
+              client.connMsg = 'challenge min is too big';
             }
 
             const challengeData = Buffer.from(client.challenge.data);
@@ -418,42 +421,156 @@ export class Server extends Network {
             this._logger.debug(f('client proof: %s', cProof));
             this._logger.debug(f('client nonce: %s', cNonce));
 
-            // TODO check Local Node
-
-            if (VERSION != cVersion) {
-              this._logger.warn(f('client %s version mismatch: %s != %s', client.uuid, VERSION, cVersion));
-              client.conn_mode = ConnectionMode.Disconnected;
-              client.conn_msg = 'version mismatch';
+            // Local
+            if (this._localNode.equals(cId)) {
+              this._logger.warn(f('client %s is local node', client.uuid));
+              client.connMode = ConnectionMode.Disconnected;
+              client.connMsg = 'client is local node';
               break;
             }
 
+            // Version
+            if (VERSION != cVersion) {
+              this._logger.warn(f('client %s version mismatch: %s != %s', client.uuid, VERSION, cVersion));
+              client.connMode = ConnectionMode.Disconnected;
+              client.connMsg = 'version mismatch';
+              break;
+            }
+
+            // Challenge
             if (client.cash === null) {
               this._logger.warn(f('client %s cash is null', client.uuid));
-              client.conn_mode = ConnectionMode.Disconnected;
-              client.conn_msg = 'cash is null';
+              client.connMode = ConnectionMode.Disconnected;
+              client.connMsg = 'cash is null';
               break;
             }
             if (!client.cash.verify(cProof, cNonce)) {
               this._logger.warn(f('client %s cash verify failed', client.uuid));
-              client.conn_mode = ConnectionMode.Disconnected;
-              client.conn_msg = 'cash verify failed';
+              client.connMode = ConnectionMode.Disconnected;
+              client.connMsg = 'cash verify failed';
               break;
             }
 
             // Contact
-            const contact = Contact.resolve(cContact);
+            const peerAddrInfo = client.socket.address() as AddressInfo;
+            const contact: Contact = await Contact.resolve(cContact, peerAddrInfo.address);
 
-            switch (client.dir_mode) {
+            let cSwitch = false;
+            let _client: Client | null = null;
+            switch (client.dirMode) {
               case Direction.Inbound:
+                // Client is incoming
                 this._logger.debug(f('client %s, inbound', client.uuid));
+
+                if (contact.is_valid) {
+                  // Client sent contact info
+                  const cAddress = contact.address as string;
+                  const cPort = contact.port as number;
+
+                  _client = this._addressbook.getClientById(cId);
+                  if (_client === null) {
+                    this._logger.debug(f('client not found by ID (A)'));
+
+                    _client = this._addressbook.getClientByAddrPort(cAddress, cPort);
+                    if (_client === null) {
+                      this._logger.debug(f('client not found by Addr:Port (B)'));
+
+                      _client = new Client();
+                      _client.id = cId;
+                      _client.address = cAddress;
+                      _client.port = cPort;
+
+                      _client.dirMode = client.dirMode;
+                      _client.debugAdd = `id command, incoming, contact infos, not found by id, not found by addr:port, original: ${client.debugAdd}`;
+
+                      this._addressbook.addClient(_client);
+                    }
+                    else {
+                      this._logger.debug(f('client found (B)'));
+                    }
+                  } else {
+                    this._logger.debug(f('client found (A)'));
+                  }
+
+                  _client.address = cAddress;
+                  _client.port = cPort;
+                } else {
+                  // Client sent no contact info
+                  _client = this._addressbook.getClientById(cId);
+                  if (_client === null) {
+                    this._logger.debug(f('client not found by ID (C)'));
+
+                    _client = new Client();
+                    _client.id = cId;
+                    _client.dirMode = client.dirMode;
+                    _client.debugAdd = `id command, incoming, no contact infos, not found by id, original: ${client.debugAdd}`;
+
+                    this._addressbook.addClient(_client);
+                  } else {
+                    this._logger.debug(f('client not found by ID (C)'));
+                  }
+                }
+
+                cSwitch = true;
                 break;
 
               case Direction.Outbound:
-                this._logger.debug(f('client %s, outbound', client.uuid));
+                // Client is outgoing
+                this._logger.debug(f('client is outgoing'));
+
+                // TODO: possible wrong approach
+                _client = client as Client;
+
+                if (contact.is_valid) {
+                  this._logger.debug(f('client has contact infos'));
+
+                  // Client sent contact info
+                  const cAddress = contact.address as string;
+                  const cPort = contact.port as number;
+
+                  _client.address = cAddress;
+                  _client.port = cPort;
+                } else {
+                  this._logger.debug('client has NO contact infos');
+                }
+
                 break;
+
+              default:
+                const msg = f('client %s, unknown direction mode %d', client.uuid, client.dirMode);
+                this._logger.crit(msg);
+                throw new Error(msg);
             }
 
-            client.auth |= AuthLevel.ReceivedId;
+            if (_client.id === undefined || _client.id === null) {
+              _client.id = cId;
+            }
+
+            this._logger.debug(f('Client A: %s', client));
+            this._logger.debug(f('Client B: %s', _client));
+
+            _client.refreshSeenAt();
+            _client.refreshUsedAt();
+            _client.incMeetings();
+
+            _client.socket = client.socket;
+            _client.connMode = client.connMode;
+            _client.auth |= AuthLevel.ReceivedId;
+            // TODO actions
+            _client.challenge = client.challenge;
+
+            this._addressbook.changed();
+
+            if (cSwitch && !client.equals(_client)) {
+              this._logger.debug(f('switch client %s', client.uuid));
+
+              this._clients.delete(client.uuid);
+              this._clients.set(_client.uuid, _client as ConnectedClient);
+            }
+
+            this._clientSendOk(client);
+
+            this._logger.debug(f('Client Z: %s', _client));
 
             break;
 

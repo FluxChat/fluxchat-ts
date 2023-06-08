@@ -54,11 +54,12 @@ interface JsonClient {
   address?: string;
   port?: number;
   id?: string;
-  seen_at?: Date;
+  seenAt?: Date;
+  usedAt?: Date;
   meetings?: number;
-  is_bootstrap?: boolean;
-  is_trusted?: boolean;
-  debug_add?: string;
+  isBootstrap?: boolean;
+  isTrusted?: boolean;
+  debugAdd?: string;
 }
 
 interface BaseClient {
@@ -66,13 +67,16 @@ interface BaseClient {
 }
 
 export interface ConnectedClient extends BaseClient {
-  conn_mode: ConnectionMode;
-  conn_msg: string;
-  dir_mode: Direction;
+  debugAdd?: string;
+  connMode: ConnectionMode;
+  connMsg: string;
+  dirMode: Direction;
   auth: AuthLevel;
   cash: Cash | null;
   challenge: Challenge;
   socket: TLSSocket;
+
+  equals(other: Client): boolean
   reset(): void;
 }
 
@@ -81,21 +85,22 @@ export class Client implements Serializable, JsonClient, BaseClient {
   public address?: string;
   public port?: number;
   public id?: string;
-  public seen_at?: Date;
+  public seenAt?: Date;
+  public usedAt?: Date;
   public meetings?: number;
-  public is_bootstrap?: boolean;
-  public is_trusted?: boolean;
-  public debug_add?: string;
+  public isBootstrap?: boolean;
+  public isTrusted?: boolean;
+  public debugAdd?: string;
 
   // Unmapped
   public node: Node | null = null;
 
   // Connection
-  public conn_mode: ConnectionMode = ConnectionMode.Disconnected;
-  public conn_msg: string | null = null;
+  public connMode: ConnectionMode = ConnectionMode.Disconnected;
+  public connMsg: string | null = null;
 
   // Direction
-  public dir_mode: Direction = Direction.Unknown;
+  public dirMode: Direction = Direction.Unknown;
 
   // Auth
   public auth: number = AuthLevel.NotAuthenticated;
@@ -116,7 +121,7 @@ export class Client implements Serializable, JsonClient, BaseClient {
   }
 
   public toString(): string {
-    return f('Client(%s)', this.uuid);
+    return f('Client(%s,%s:%d,ID=%s)', this.uuid, this.address, this.port, this.id);
   }
 
   public toJSON(): object {
@@ -126,11 +131,12 @@ export class Client implements Serializable, JsonClient, BaseClient {
       address: this.address,
       port: this.port,
       id: this.id,
-      seen_at: this.seen_at,
+      seen_at: this.seenAt,
+      used_at: this.usedAt,
       meetings: this.meetings,
-      is_bootstrap: this.is_bootstrap,
-      is_trusted: this.is_trusted,
-      debug_add: this.debug_add,
+      is_bootstrap: this.isBootstrap,
+      is_trusted: this.isTrusted,
+      debug_add: this.debugAdd,
     };
   }
 
@@ -143,18 +149,23 @@ export class Client implements Serializable, JsonClient, BaseClient {
     this.address = _mapped.address;
     this.port = _mapped.port;
     this.id = _mapped.id;
-    this.seen_at = _mapped.seen_at;
+    this.seenAt = _mapped.seenAt;
+    this.usedAt = _mapped.usedAt;
     this.meetings = _mapped.meetings;
-    this.is_bootstrap = _mapped.is_bootstrap;
-    this.is_trusted = _mapped.is_trusted;
-    this.debug_add = _mapped.debug_add;
+    this.isBootstrap = _mapped.isBootstrap;
+    this.isTrusted = _mapped.isTrusted;
+    this.debugAdd = _mapped.debugAdd;
+  }
+
+  public equals(other: Client): boolean {
+    return this.uuid === other.uuid;
   }
 
   public reset(): void {
     this._logger.info(f('reset(%s)', this.uuid));
 
-    this.conn_mode = ConnectionMode.Disconnected;
-    this.conn_msg = null;
+    this.connMode = ConnectionMode.Disconnected;
+    this.connMsg = null;
     this.auth = AuthLevel.NotAuthenticated;
     this.actions = [];
     this.challenge = new Challenge();
@@ -163,5 +174,23 @@ export class Client implements Serializable, JsonClient, BaseClient {
 
   public hasContact(): boolean {
     return this.address !== undefined && this.port !== undefined;
+  }
+
+  public refreshSeenAt(): void {
+    this._logger.info(f('refreshSeenAt(%s)', this.uuid));
+
+    this.seenAt = new Date();
+  }
+
+  public refreshUsedAt(): void {
+    this._logger.info(f('refreshUsedAt(%s)', this.uuid));
+
+    this.usedAt = new Date();
+  }
+
+  public incMeetings(): void {
+    this._logger.info(f('incMeetings(%s)', this.uuid));
+
+    this.meetings = (this.meetings || 0) + 1;
   }
 }

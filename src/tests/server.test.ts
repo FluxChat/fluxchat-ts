@@ -16,10 +16,10 @@ interface WriteRawData {
 
 function createConfig(): Config {
   return {
-    address: '',
-    port: 0,
-    contact: '',
-    id: '',
+    address: 'placeholder',
+    port: 1337,
+    contact: 'private',
+    id: 'FC_A7TEBrLHA8vTAtEpAct17brztRGTZwdAmQZSpAio1qcj',
     data_dir: '',
     challenge: {
       min: 0,

@@ -47,7 +47,7 @@ export class Node {
     const node = new Node(id);
     //process.env.IS_UNITTEST !== 'true' &&
     if (!node.isValid()) {
-      throw new Error('Invalid ID');
+      throw new Error(`Invalid ID: '${id}'`);
     }
 
     return node;

@@ -22,9 +22,9 @@ async function dnsLookup(hostname: string): Promise<string> {
 };
 
 export class Contact {
-  addr: string | null = null;
-  port: number | null = null;
-  is_valid: boolean = false;
+  public address: string | null = null;
+  public port: number | null = null;
+  public is_valid: boolean = false;
 
   static async resolve(raw: string, raddr: string | null = null): Promise<Contact> {
     const contact = new Contact();
@@ -42,10 +42,10 @@ export class Contact {
     }
 
     if (items.length === 1) {
-      contact.addr = items[0];
+      contact.address = items[0];
       contact.port = null;
     } else if (items.length === 2) {
-      contact.addr = items[0];
+      contact.address = items[0];
       if (items[1] === '') {
         contact.port = null;
       } else {
@@ -53,50 +53,50 @@ export class Contact {
       }
     } else if (items.length > 2) {
       // IPv6 address with port
-      contact.addr = items.slice(0, items.length - 1).join(':');
+      contact.address = items.slice(0, items.length - 1).join(':');
       contact.port = parseInt(items[items.length - 1]);
 
-      // console.log('IPv6', contact.addr, contact.port);
+      console.log('IPv6', contact.address, contact.port); // TODO
     }
 
-    if (contact.addr === '') {
-      contact.addr = 'private';
+    if (contact.address === '') {
+      contact.address = 'private';
     }
 
-    if (contact.addr === 'public') {
-      contact.addr = raddr;
-    } else if (contact.addr === 'private') {
-      contact.addr = null;
+    if (contact.address === 'public') {
+      contact.address = raddr;
+    } else if (contact.address === 'private') {
+      contact.address = null;
       contact.port = null;
-    } else if (contact.addr !== null) {
-      if (isIPv4(contact.addr)) {
+    } else if (contact.address !== null) {
+      if (isIPv4(contact.address)) {
         // Addr is IPv4 address, we can use it directly.
-        if (contact.addr.slice(0, 4) === '127.') {
-          contact.addr = null;
+        if (contact.address.slice(0, 4) === '127.') {
+          contact.address = null;
         }
-      } else if (isIPv6(contact.addr)) {
+      } else if (isIPv6(contact.address)) {
         // Addr is IPv6 address, we can use it directly.
-        if (contact.addr == '::' || contact.addr == '::1') {
-          contact.addr = null;
+        if (contact.address == '::' || contact.address == '::1') {
+          contact.address = null;
         }
       } else {
         // Addr is host, we have to resolve it.
         try {
-          const address: string = await dnsLookup(contact.addr);
+          const address: string = await dnsLookup(contact.address);
           if (isIPv4(address)) {
             if (address.slice(0, 4) === '127.' || address == '::1') {
-              contact.addr = null;
+              contact.address = null;
             }
           }
         } catch (error) {
-          contact.addr = null;
+          contact.address = null;
         }
       }
     } else {
-      contact.addr = null;
+      contact.address = null;
     }
 
-    contact.is_valid = contact.addr !== null && contact.port !== null;
+    contact.is_valid = contact.address !== null && contact.port !== null;
     return contact;
   }
 }
