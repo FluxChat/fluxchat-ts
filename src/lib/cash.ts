@@ -123,6 +123,8 @@ export class Cash {
       Buffer.from(nonce.toString()),
     ]);
 
+    console.log('input Data', inputData);
+
     const hash = createHash('sha256');
     const digest1 = hash.update(inputData.toString()).digest().toString('hex');
     console.log('digest1', digest1); // TODO

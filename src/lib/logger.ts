@@ -19,7 +19,10 @@ export class LoggerFactory {
   private static _createDefaultFormat(): LogFormat {
     return wformat.combine(
       wformat.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
-      wformat.printf((info) => `${info.timestamp} ${process.pid} ${info.level.toUpperCase()} ${info.label} ${info.message}`)
+      wformat.printf((info) => {
+        const level = `${info.level.toUpperCase()}       `.slice(0, 5);
+        return `${info.timestamp} ${process.pid} ${level} ${info.label} ${info.message}`;
+      })
     );
   }
 

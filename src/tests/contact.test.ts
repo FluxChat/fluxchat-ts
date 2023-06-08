@@ -1,5 +1,5 @@
 
-import { describe, expect, jest, test, it } from '@jest/globals';
+import { describe, expect, test } from '@jest/globals';
 import { Contact } from '../lib/contact';
 import { isIPv6Enabled } from '../lib/network';
 

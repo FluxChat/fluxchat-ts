@@ -107,13 +107,13 @@ export class Server extends Network {
     this._shutdown = true;
 
     this._logger.info('shutdown tasks');
-    for (let [name, task] of this._tasks) {
+    for (const [name, task] of this._tasks) {
       this._logger.debug(f('task %s', name));
       clearInterval(task);
     }
 
     this._logger.info('shutdown clients');
-    for (let [c_uuid, client] of this._clients) {
+    for (const [c_uuid, client] of this._clients) {
       this._logger.debug(f('client %s', client.uuid));
       client.socket.destroy();
     }
