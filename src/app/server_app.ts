@@ -41,7 +41,7 @@ class ServerApp extends App {
   }
 
   private _shutdown(): void {
-    this._logger.info('_shutdown()')
+    this._logger.info('_shutdown()');
 
     this._server.shutdown('SIGINT');
     this._cleanup();

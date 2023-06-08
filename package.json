@@ -8,7 +8,8 @@
     "build": "tsc --build --verbose",
     "build-debug": "tsc --outDir ./build-debug --sourceMap",
     "start": "node build/src/app/server_app.js",
-    "test": "jest"
+    "test": "jest",
+    "lint": "eslint src"
   },
   "homepage": "https://fluxchat.dev/",
   "repository": {
@@ -46,6 +47,9 @@
   },
   "devDependencies": {
     "@types/node": "^18.16.0",
+    "@typescript-eslint/eslint-plugin": "^5.59.9",
+    "@typescript-eslint/parser": "^5.59.9",
+    "eslint": "^8.42.0",
     "jest": "^29.5.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.0"

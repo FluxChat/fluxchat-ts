@@ -44,7 +44,7 @@ export class AddressBook extends Database<string, Client> {
       }, new Map<string, Client>());
   }
 
-  public async loadBootstrap(path: string, clean: boolean = true): Promise<void> {
+  public async loadBootstrap(path: string, clean = true): Promise<void> {
     this._logger.debug(f('loadBootstrap(%s)', path));
 
     if (!existsSync(path)) {
@@ -84,7 +84,9 @@ export class AddressBook extends Database<string, Client> {
   }
 
   // TODO: tests
-  public getNearestTo(node: Node, limit: number = 20, withContactInfos: boolean | null = null): Array<Client> {
+  public getNearestTo(node: Node, withContactInfos: boolean | null = null, limit = 20): Array<Client> {
+    /* eslint-disable */
+
     const sorted = [...this._data.values()]
       .filter((client: Client): boolean => {
         return client.node !== null;

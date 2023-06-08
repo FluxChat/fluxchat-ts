@@ -31,13 +31,13 @@ export class LoggerFactory {
     if (!logFile.startsWith('/') && !logFile.includes('/')) {
       logFile = pjoin(config.data_dir, logFile);
     }
-    let effectiveLogLevel: LogLevel = addlogLevel === undefined ? config.log.level : addlogLevel;
+    const effectiveLogLevel: LogLevel = addlogLevel === undefined ? config.log.level : addlogLevel;
     const format = LoggerFactory._createDefaultFormat();
     LoggerFactory.instance = new LoggerFactory(logFile, effectiveLogLevel, format);
   }
 
   private static _createDefaultConsoleLogger(): void {
-    const logFile: string = '/dev/null';
+    const logFile = '/dev/null';
     const debugLevel: LogLevel = 'warn';
     const format = LoggerFactory._createDefaultFormat();
     LoggerFactory.instance = new LoggerFactory(logFile, debugLevel, format);

@@ -7,12 +7,12 @@ import { Command } from '../lib/network';
 interface ReadRawData {
   test: Array<number>;
   expect: Array<Command>;
-};
+}
 
 interface WriteRawData {
   test: Array<Command>;
   expect: Array<number>;
-};
+}
 
 function createConfig(): Config {
   return {
@@ -122,7 +122,7 @@ describe('Server', () => {
       },
     ];
 
-    for (let row of testData) {
+    for (const row of testData) {
       const raw = Buffer.from(row.test);
       // console.log('raw', raw);
 
@@ -267,9 +267,9 @@ describe('Server', () => {
       },
     ];
 
-    for (let row of testData) {
+    for (const row of testData) {
       let payload = Buffer.alloc(0);
-      for (let command of row.test) {
+      for (const command of row.test) {
         const raw = server.serializeCommand(command);
         payload = Buffer.concat([payload, raw]);
       }

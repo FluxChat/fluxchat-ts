@@ -8,7 +8,7 @@ async function dnsLookup(hostname: string): Promise<string> {
     lookup(hostname, {all: true}, (err, addresses: LookupAddress[]) => {
       // console.log('addresses', hostname, addresses);
 
-      if(err) {
+      if (err) {
         reject(err);
       } else if (addresses === undefined) {
         reject(new Error('No addresses found (undefined)'));
@@ -18,13 +18,13 @@ async function dnsLookup(hostname: string): Promise<string> {
         resolve(addresses[0].address);
       }
     });
- });
-};
+  });
+}
 
 export class Contact {
   public address: string | null = null;
   public port: number | null = null;
-  public is_valid: boolean = false;
+  public is_valid = false;
 
   static async resolve(raw: string, raddr: string | null = null): Promise<Contact> {
     const contact = new Contact();

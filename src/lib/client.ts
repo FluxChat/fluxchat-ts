@@ -11,12 +11,12 @@ import { Cash } from './cash';
 class Action {
   public id: string | null = null;
   public subid: string | null = null;
-  public is_strong: boolean = false;
+  public is_strong = false;
   public valid_until: Date | null = null;
   public func: any = null;
 
   public equals(other: Action): boolean {
-    return  this.id === other.id && this.subid === other.subid;
+    return this.id === other.id && this.subid === other.subid;
   }
 }
 

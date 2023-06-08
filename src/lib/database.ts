@@ -8,13 +8,13 @@ type KeyType = string | number;
 
 export interface Serializable {
   toJSON(): object;
-  fromJSON(data: object, key?: any): void;
-};
+  fromJSON(data: object, key?: string): void;
+}
 
 export abstract class Database<K extends KeyType, T extends Serializable> {
   private readonly _plogger: Logger;
   protected _data: Map<K, T>;
-  protected _changed: boolean = false;
+  protected _changed = false;
   protected abstract readonly _typex: new () => T;
 
   constructor(protected readonly _filePath: string) {

@@ -32,6 +32,9 @@ jobs:
           npm --version
           npm ci
 
+      - name: Run Lint
+        run: npm run lint
+
       - name: Run Tests
         run: ./bin/tests.sh
 
@@ -51,6 +54,9 @@ jobs:
           node --version
           npm --version
           npm ci
+
+      - name: Run Lint
+        run: npm run lint
 
       - name: Run Tests
         run: ./bin/tests.sh

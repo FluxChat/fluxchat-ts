@@ -2,5 +2,6 @@
 /build-debug/
 /node_modules/
 *.js
+!.eslintrc.js
 /var/
 /tmp/

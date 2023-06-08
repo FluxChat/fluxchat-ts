@@ -24,7 +24,7 @@ import { Node } from './overlay';
 const VERSION = 1;
 
 export class Server extends Network {
-  private _shutdown: boolean = false;
+  private _shutdown = false;
   private readonly _logger: Logger;
   private _privateKeyDerivation: string | null = null;
   private readonly _privateKeyFilePath: string;
@@ -77,7 +77,7 @@ export class Server extends Network {
     this._addressbook.load();
     this._addressbook.loadBootstrap(this._addressbookBootstrapFilePath);
 
-    // Main TLS Server
+    // TLS Server
     this._logger.info('start TLS server');
     const options = {
       key: [{
@@ -113,7 +113,7 @@ export class Server extends Network {
     }
 
     this._logger.info('shutdown clients');
-    for (const [c_uuid, client] of this._clients) {
+    for (const [, client] of this._clients) {
       this._logger.debug(f('client %s', client.uuid));
       client.socket.destroy();
     }
@@ -164,7 +164,7 @@ export class Server extends Network {
     this.shutdown(error.message);
   }
 
-  private _onServerDrop(socket: any): void {
+  private _onServerDrop(socket: TLSSocket): void {
     this._logger.debug(f('_onServerDrop(%s) %s:%d', typeof socket, socket.remoteAddress, socket.remotePort));
   }
 
@@ -183,7 +183,7 @@ export class Server extends Network {
     this._logger.debug(f('data: %d', data.length));
 
     const commands: Array<Command> = this._parseRaw(data);
-    for (let command of commands) {
+    for (const command of commands) {
       this._logger.debug(f('command: %s', command));
       this._clientHandleCommand(client, command);
     }
@@ -213,7 +213,7 @@ export class Server extends Network {
 
   private _debugClients(): void {
     this._logger.info(f('_debugClients() -> %d', this._clients.size));
-    for (let [c_uuid, client] of this._clients) {
+    for (const [c_uuid] of this._clients) {
       this._logger.debug(f('debug client %s', c_uuid));
     }
   }
@@ -221,7 +221,7 @@ export class Server extends Network {
   private _handleClients(): void {
     // this._logger.info('_handleClients()');
 
-    for (let [c_uuid, client] of this._clients) {
+    for (const [c_uuid, client] of this._clients) {
       // this._logger.debug(f('handle client %s', c_uuid));
 
       switch (client.connMode) {
@@ -297,7 +297,7 @@ export class Server extends Network {
     const _entries = this._addressbook.getAll();
 
     this._logger.debug(f('entries %s', _entries.size));
-    this._addressbook.getAll().forEach((client: Client, key: string) => {
+    this._addressbook.getAll().forEach((client: Client): void => {
       if (!client.socket) {
         this._logger.debug(f('client %s, socket is null', client.uuid));
         this._clientConnect(client);
@@ -594,7 +594,7 @@ export class Server extends Network {
 
             this._logger.debug(f('node: %s', cNode));
 
-            const clients = this._addressbook.getNearestTo(cNode, 20, true);
+            const clients = this._addressbook.getNearestTo(cNode, true);
             const clientIds = clients.map((client: Client): string => {
               return `${client.uuid}:${client.address}:${client.port}`;
             });

@@ -7,14 +7,14 @@ export function isIPv6Enabled(): boolean {
 
   // console.log('interfaces', interfaces);
 
-  for (const [name, ifaces] of Object.entries(interfaces)) {
+  for (const [, ifaces] of Object.entries(interfaces)) {
     // console.log('name', name);
 
     if (ifaces === undefined) {
       continue;
     }
 
-    const found = ifaces.find((iface: NetworkInterfaceInfo) => {
+    const found = ifaces.find((iface: NetworkInterfaceInfo): boolean => {
       // console.log('iface', iface.address, iface.family);
       return iface.address[0] == '2' && iface.family === 'IPv6';
     });
@@ -111,7 +111,7 @@ export class Command {
 
 export abstract class Network {
   protected _parseRaw(data: Buffer): Array<Command> {
-    let commands: Array<Command> = [];
+    const commands: Array<Command> = [];
 
     // console.log('data', data.length, data);
 
@@ -191,7 +191,7 @@ export abstract class Network {
     // Payload
     let payloadLen_i = 0;
     let payload = Buffer.alloc(0);
-    for (let arg of command.args) {
+    for (const arg of command.args) {
       payloadLen_i += argSizeLen + arg.length;
 
       const argLen_b = Buffer.alloc(argSizeLen);

@@ -17,4 +17,4 @@ export interface Config {
   readonly data_dir: string;
   readonly challenge: Challenge;
   readonly log: ConfigLog;
-};
+}
