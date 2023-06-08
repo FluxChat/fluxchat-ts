@@ -22,12 +22,12 @@ function createConfig(): Config {
     id: 'FC_A7TEBrLHA8vTAtEpAct17brztRGTZwdAmQZSpAio1qcj',
     data_dir: '',
     challenge: {
-      min: 0,
-      max: 0,
+      min: 10,
+      max: 12,
     },
     log: {
-      level: '',
-      file: '',
+      level: 'error',
+      file: '/dev/null',
     },
   };
 }
