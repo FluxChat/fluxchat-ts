@@ -56,19 +56,23 @@ class ServerApp extends App {
     unlinkSync(this._pidFile);
   }
 }
-const options = {
-  string: ['config', 'loglevel'],
-  alias: {
-    config: ['c'],
-    loglevel: ['l'],
-  },
-  boolean: ['dev'],
-  default: {
-    config: 'var/config1.json',
-    loglevel: undefined,
-  },
-};
-const args = minimist(process.argv.slice(2), options);
 
-const app: ServerApp = new ServerApp(args);
-app.run();
+function main(): void {
+  const options = {
+    string: ['config', 'loglevel'],
+    alias: {
+      config: ['c'],
+      loglevel: ['l'],
+    },
+    boolean: ['dev'],
+    default: {
+      config: 'var/config1.json',
+      loglevel: undefined,
+    },
+  };
+  const args = minimist(process.argv.slice(2), options);
+
+  const app: ServerApp = new ServerApp(args);
+  app.run();
+}
+main();
