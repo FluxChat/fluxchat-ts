@@ -9,23 +9,26 @@ import { createDiffieHellman } from 'crypto';
 // generated with:
 //      openssl dhparam -out resources/crypto/dhparam.pem 4096
 //      openssl dhparam -text -noout -in resources/crypto/dhparam.pem
-const dhparamHex = readFileSync('resources/crypto/dhparam.hex').toString();
-console.log('dhparamHex', dhparamHex);
 
-const parameters = createDiffieHellman(dhparamHex, 'hex', 2);
-console.log('parameters', parameters, parameters.verifyError);
+(() => {
+  const dhparamHex = readFileSync('resources/crypto/dhparam.hex').toString();
+  console.log('dhparamHex', dhparamHex);
 
-const alicePublicKey = parameters.generateKeys();
-console.log('alicePublicKey', alicePublicKey.length, alicePublicKey);
+  const parameters = createDiffieHellman(dhparamHex, 'hex', 2);
+  console.log('parameters', parameters, parameters.verifyError);
 
-const bobPublicKey = parameters.generateKeys();
-console.log('bobPublicKey', bobPublicKey.length, bobPublicKey);
+  const alicePublicKey = parameters.generateKeys();
+  console.log('alicePublicKey', alicePublicKey.length, alicePublicKey);
 
-// Exchange and generate the secret...
-const aliceSecret = parameters.computeSecret(bobPublicKey);
-const bobSecret = parameters.computeSecret(alicePublicKey);
+  const bobPublicKey = parameters.generateKeys();
+  console.log('bobPublicKey', bobPublicKey.length, bobPublicKey);
 
-console.log('aliceSecret', aliceSecret.length, aliceSecret.toString('hex'));
-console.log('bobSecret', bobSecret.length, bobSecret.toString('hex'));
+  // Exchange and generate the secret...
+  const aliceSecret = parameters.computeSecret(bobPublicKey);
+  const bobSecret = parameters.computeSecret(alicePublicKey);
 
-strictEqual(aliceSecret.toString('hex'), bobSecret.toString('hex'));
+  console.log('aliceSecret', aliceSecret.length, aliceSecret.toString('hex'));
+  console.log('bobSecret', bobSecret.length, bobSecret.toString('hex'));
+
+  strictEqual(aliceSecret.toString('hex'), bobSecret.toString('hex'));
+})();

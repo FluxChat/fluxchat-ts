@@ -8,7 +8,9 @@ class OverloadFoo {
   }
 }
 
-const f1 = new OverloadFoo();
-f1.myMethod(1);
-f1.myMethod('abc');
-// f1.myMethod(1);
+(() => {
+  const f1 = new OverloadFoo();
+  f1.myMethod(1);
+  f1.myMethod('abc');
+  // f1.myMethod(1);
+})();

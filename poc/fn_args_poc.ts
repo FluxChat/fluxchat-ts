@@ -1,12 +1,15 @@
-function test1b(...args: any[]) {
+
+function argsTest1b(...args: any[]) {
   console.log(args);
 }
 
-function test2b(...args: number[]) {
+function argsTest2b(...args: number[]) {
   console.log(args);
 }
 
-test1b('123', 123, {a: 1});
-test1b();
+(() => {
+  argsTest1b('123', 123, {a: 1});
+  argsTest1b();
 
-test2b(1, 2, 3);
+  argsTest2b(1, 2, 3);
+})();

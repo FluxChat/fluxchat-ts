@@ -21,8 +21,10 @@ class ExtBar extends ExtFoo {
   }
 }
 
-const foo1 = new ExtFoo(21);
+(() => {
+  const foo1 = new ExtFoo(21);
 const bar1 = new ExtBar(42);
 console.log('foo1', foo1);
 console.log('bar1', bar1);
 console.log('bar1.x', bar1.x);
+})();

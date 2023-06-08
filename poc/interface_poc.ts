@@ -13,8 +13,9 @@ class IntTestClass implements TestInt {
   }
 }
 
-const test = new IntTestClass();
+(() => {
+  const test = new IntTestClass();
 
-
-console.log(test.toJSON());
-console.log(JSON.stringify(test, null, 4));
+  console.log(test.toJSON());
+  console.log(JSON.stringify(test, null, 4));
+})();

@@ -1,5 +1,5 @@
 
-function demo(): Promise<number> {
+function demoPromise(): Promise<number> {
   return new Promise<number>((resolve, reject) => {
     // resolve(123);
     reject(456);
@@ -9,16 +9,18 @@ function demo(): Promise<number> {
 class PromisePoc {
   public async run(): Promise<void> {
     console.log('-> run()');
-    await demo()
+    await demoPromise()
       .then(function(success): void {
         console.log('success', success);
       })
       .catch(function(error): void {
         console.log('error', error);
       });
-        console.log('-> run() end');
+      console.log('-> run() end');
     }
 }
 
-const pp = new PromisePoc();
-pp.run();
+(() => {
+  const pp = new PromisePoc();
+  pp.run();
+})();

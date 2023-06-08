@@ -1,5 +1,5 @@
 
-class Foo {
+class BindFoo {
   private name: string;
 
   constructor(name: string) {
@@ -11,7 +11,7 @@ class Foo {
   }
 }
 
-class Bar {
+class BindBar {
   private name: string;
 
   constructor(name: string) {
@@ -23,10 +23,12 @@ class Bar {
   }
 }
 
-const o1 = new Foo('A');
-const greetFunc1 = o1.greet.bind(o1, 'B');
-greetFunc1();
+(() => {
+  const o1 = new BindFoo('A');
+  const greetFunc1 = o1.greet.bind(o1, 'B');
+  greetFunc1();
 
-const o2 = new Bar('B');
-const greetFunc2 = o2.greet.bind(o1);
-greetFunc2();
+  const o2 = new BindBar('B');
+  const greetFunc2 = o2.greet.bind(o1);
+  greetFunc2();
+})();

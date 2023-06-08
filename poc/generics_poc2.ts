@@ -33,6 +33,8 @@ class GenPocClient implements Serializable {
   }
 }
 
-const genPoc2 = new GenPoc2Impl();
-const genPocClient = genPoc2.createNewInstance();
-genPocClient.test();
+(() => {
+  const genPoc2 = new GenPoc2Impl();
+  const genPocClient = genPoc2.createNewInstance();
+  genPocClient.test();
+})();
