@@ -1,5 +1,5 @@
 
-import { strict as assert } from 'assert';
+import { strict } from 'assert';
 import { networkInterfaces, NetworkInterfaceInfo } from 'os';
 
 export function isIPv6Enabled(): boolean {
@@ -48,9 +48,9 @@ export class Argument {
   public asInt(): number {
     switch (typeof this.value) {
       case 'string':
-        const buf = Buffer.alloc(4);
-        buf.write(this.value);
-        return buf.readUInt32LE();
+        const buf1 = Buffer.alloc(4);
+        buf1.write(this.value, 'binary');
+        return buf1.readUInt32LE();
 
       case 'number':
         return this.value;
@@ -147,7 +147,7 @@ export abstract class Network {
           // console.log('argLen_i', argLen_i);
 
           const argVal: string  = payload_b.subarray(payloadPos + argSizeLen, payloadPos + argSizeLen + argLen_i).toString();
-          assert.equal(argLen_i, argVal.length);
+          strict.equal(argLen_i, argVal.length);
 
           // console.log('argVal', argVal.length, argVal);
 
