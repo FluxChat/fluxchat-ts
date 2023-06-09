@@ -9,10 +9,10 @@ describe('Argument', () => {
   ];
   test.each(testDataInt)('as integer %#', (input: number, exp: number) => {
     const buf = Buffer.alloc(4);
-      buf.writeUInt32LE(input);
-      const arg = new Argument(buf, buf.length);
+    buf.writeUInt32LE(input);
+    const arg = new Argument(buf, buf.length);
 
-      expect(arg.asInt()).toBe(exp);
+    expect(arg.asInt()).toBe(exp);
   });
 
   const testDataStr = [
