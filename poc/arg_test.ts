@@ -17,9 +17,7 @@ import { Argument } from '../src/lib/network';
   const b5 = Buffer.alloc(4, '\x87\x93\x6e\x04\xFF\xFF', 'binary');
   const n = b5.readUInt32LE();
 
-  const arg1 = new Argument('\x87\x93\x6e\x04');
-  console.log(arg1.asInt());
-
-  const arg2 = new Argument('\x41');
-  console.log(arg2.asInt());
+  const b6 = Buffer.from('\x87\x93\x6e\x04');
+  let argx = new Argument(b6, 4);
+  console.log(argx.asInt());
 })();

@@ -181,6 +181,7 @@ export class Server extends Network {
   private _onClientData(client: ConnectedClient, data: Buffer): void {
     this._logger.debug(f('_onClientData(%s)', client));
     this._logger.debug(f('data: %d', data.length));
+    this._logger.debug(f('data: %d', data.length));
 
     const commands: Array<Command> = this._parseRaw(data);
     for (const command of commands) {
@@ -388,11 +389,15 @@ export class Server extends Network {
             this._logger.debug(f('mine cash: %s', cash));
             const cycles = cash.mine();
             this._logger.debug(f('mine done: %d', cycles));
-            this._logger.debug(f('proof: %s', cash.proof));
-            this._logger.debug(f('nonce: %s', cash.nonce));
 
             client.challenge.proof = cash.proof;
             client.challenge.nonce = cash.nonce;
+
+            this._logger.debug(f('cash.min: %s', client.challenge.min));
+            this._logger.debug(f('cash.max: %s', client.challenge.max));
+            this._logger.debug(f('cash.data: %s', client.challenge.data));
+            this._logger.debug(f('cash.proof: %s', cash.proof));
+            this._logger.debug(f('cash.nonce: %s', cash.nonce));
 
             break;
 
@@ -418,6 +423,7 @@ export class Server extends Network {
             this._logger.debug(f('client version: %s', cVersion));
             this._logger.debug(f('client id: %s', cId));
             this._logger.debug(f('client contact: %s', cContact));
+
             this._logger.debug(f('client proof: %s', cProof));
             this._logger.debug(f('client nonce: %s', cNonce));
 
@@ -444,7 +450,10 @@ export class Server extends Network {
               client.connMsg = 'cash is null';
               break;
             }
-            if (!client.cash.verify(cProof, cNonce)) {
+            this._logger.debug('cash.verify start');
+            const verified = client.cash.verify(cProof, cNonce);
+            this._logger.debug('cash.verify end');
+            if (!verified) {
               this._logger.warn(f('client %s cash verify failed', client.uuid));
               client.connMode = ConnectionMode.Disconnected;
               client.connMsg = 'cash verify failed';
@@ -635,7 +644,7 @@ export class Server extends Network {
     this._logger.debug(f('_clientSendCommand(%s, %s)', client.uuid, command));
 
     const data = this._serializeCommand(command);
-    this._logger.debug(f('data', data));
+    // this._logger.debug(f('data', data));
     this._logger.debug(f('data hex: %s', data.toString('hex')));
     this._logger.debug(f('data str: "%s"', data.toString()));
 

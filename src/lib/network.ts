@@ -1,5 +1,6 @@
 
 import { strict } from 'assert';
+import { inspect as i } from 'util';
 import { networkInterfaces, NetworkInterfaceInfo } from 'os';
 
 export function isIPv6Enabled(): boolean {
@@ -29,44 +30,26 @@ export function isIPv6Enabled(): boolean {
 }
 
 export class Argument {
-  public readonly length: number = 0;
-
   constructor(
-    public readonly value: string | number,
+    public readonly value: Buffer,
+    public readonly length: number,
   ) {
-    switch (typeof value) {
-      case 'string':
-        this.length = value.length;
-        break;
-
-      case 'number':
-        this.length = 4;
-        break;
-    }
   }
 
   public asInt(): number {
-    switch (typeof this.value) {
-      case 'string':
-        const buf1 = Buffer.alloc(4);
-        buf1.write(this.value, 'binary');
-        return buf1.readUInt32LE();
-
-      case 'number':
-        return this.value;
+    console.log(this.value);
+    if (this.value.length < 4) {
+      const buf = Buffer.alloc(4);
+      this.value.copy(buf, 0, 0, this.value.length);
+      console.log(buf);
+      return buf.readUInt32LE();
     }
+
+    return this.value.readUInt32LE();
   }
 
-  public asBytes(): Buffer {
-    switch (typeof this.value) {
-      case 'string':
-        return Buffer.from(this.value);
-
-      case 'number':
-        const buf = Buffer.alloc(4);
-        buf.writeUInt32LE(this.value);
-        return buf;
-    }
+  public asString(): string {
+    return this.value.toString('binary');
   }
 }
 
@@ -76,9 +59,22 @@ export class Command {
   constructor(
     public readonly group: number = 0,
     public readonly command: number = 0,
-    data: Array<string | number> = [],
+    data: Array<Buffer | string | number> = [],
   ) {
-    this.args = data.map((item: string | number) => new Argument(item));
+    this.args = data.map((item: Buffer | string | number) => {
+      switch (typeof item) {
+        case 'number':
+          const buf = Buffer.alloc(4);
+          buf.writeUInt32LE(item);
+          return new Argument(buf, 4);
+
+        case 'string':
+          return new Argument(Buffer.from(item), item.length);
+
+        default:
+          return new Argument(item, item.length);
+      }
+    });
   }
 
   public asInt(index: number): number {
@@ -96,7 +92,7 @@ export class Command {
       throw new Error(`Argument ${index} is undefined`);
     }
 
-    return arg.asBytes();
+    return arg.value;
   }
 
   public asString(index: number): string {
@@ -105,7 +101,7 @@ export class Command {
       throw new Error(`Argument ${index} is undefined`);
     }
 
-    return arg.asBytes().toString();
+    return arg.asString();
   }
 }
 
@@ -113,48 +109,38 @@ export abstract class Network {
   protected _parseRaw(data: Buffer): Array<Command> {
     const commands: Array<Command> = [];
 
-    // console.log('data', data.length, data);
-
     let pos = 0;
     while (pos < data.length) {
-      // console.log('pos', pos);
 
       const flags_i: number = data[pos];
-      // console.log('flags_i', flags_i);
 
       const flagLengthsAreFourBytes = (flags_i & 0x01) === 0x01;
       const argSizeLen = flagLengthsAreFourBytes ? 4 : 1;
       const payloadLen_i: number = data.subarray(pos + 3, pos + 7).readUInt32LE();
       const command = new Command(data[pos + 1], data[pos + 2]);
 
-      // console.log('flagLengthsAreFourBytes', flagLengthsAreFourBytes);
-      // console.log('argSizeLen', argSizeLen);
-      // console.log('payloadLen_i', payloadLen_i);
-      // console.log('command', command);
-
       if (payloadLen_i > 0) {
         const payload_b: Buffer = data.subarray(pos + 7, pos + 7 + payloadLen_i);
-        // console.log('payload_b', payload_b);
 
         let payloadPos = 0;
         while (payloadPos < payloadLen_i) {
-          // console.log('payloadPos', payloadPos);
 
           const argLen_b: Buffer = payload_b.subarray(payloadPos, payloadPos + argSizeLen);
           const argLen_i: number = flagLengthsAreFourBytes ? argLen_b.readUInt32LE() : argLen_b.readUInt8();
 
-          // console.log('argLen_b', argLen_b);
-          // console.log('argLen_i', argLen_i);
+          const argVal: Buffer = payload_b.subarray(payloadPos + argSizeLen, payloadPos + argSizeLen + argLen_i);
+          if (argVal.length !== argLen_i) {
+            throw new Error(`Argument length mismatch: ${argLen_i} != ${argVal.length}`);
+          }
+          // strict.equal(argLen_i, argVal.length);
 
-          const argVal: string  = payload_b.subarray(payloadPos + argSizeLen, payloadPos + argSizeLen + argLen_i).toString();
-          strict.equal(argLen_i, argVal.length);
-
-          // console.log('argVal', argVal.length, argVal);
+          console.log('argVal', argLen_i);
+          console.log('argLen_i', argLen_i);
 
           payloadPos += argLen_i + argSizeLen;
-          // console.log('payloadPos', payloadPos);
 
-          command.args.push(new Argument(argVal));
+          const arg = new Argument(argVal, argLen_i);
+          command.args.push(arg);
         }
       }
 
