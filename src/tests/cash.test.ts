@@ -53,9 +53,9 @@ describe('Cash', () => {
     },
   ];
 
-  test.each(testData)('verify %#', (test) => {
-    const cash = new Cash(Buffer.from(test.data), test.bits);
-    const verified = cash.verify(test.proof, test.nonce);
-    expect(verified).toBe(test.verified);
+  test.each(testData)('verify %#', (testRow) => {
+    const cash = new Cash(Buffer.from(testRow.data), testRow.bits);
+    const verified = cash.verify(testRow.proof, testRow.nonce);
+    expect(verified).toBe(testRow.verified);
   });
 });
