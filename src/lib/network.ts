@@ -37,11 +37,11 @@ export class Argument {
   }
 
   public asInt(): number {
-    console.log(this.value);
+    // console.log(this.value);
     if (this.value.length < 4) {
       const buf = Buffer.alloc(4);
       this.value.copy(buf, 0, 0, this.value.length);
-      console.log(buf);
+      // console.log(buf);
       return buf.readUInt32LE();
     }
 
@@ -134,8 +134,8 @@ export abstract class Network {
           }
           // strict.equal(argLen_i, argVal.length);
 
-          console.log('argVal', argLen_i);
-          console.log('argLen_i', argLen_i);
+          // console.log('argVal', argLen_i);
+          // console.log('argLen_i', argLen_i);
 
           payloadPos += argLen_i + argSizeLen;
 
@@ -187,22 +187,7 @@ export abstract class Network {
         argLen_b.writeUInt8(arg.length);
       }
 
-      let arg_b: Buffer;
-      switch (typeof arg.value) {
-        case 'string':
-          arg_b = Buffer.from(arg.value);
-          break;
-
-        case 'number':
-          arg_b = Buffer.alloc(4);
-          arg_b.writeUInt32LE(arg.value);
-          break;
-
-        default:
-          throw new Error(`Unknown type ${typeof arg.value}`);
-      }
-
-      payload = Buffer.concat([payload, argLen_b, arg_b]);
+      payload = Buffer.concat([payload, argLen_b, arg.value]);
     }
 
     const payloadLen_b = Buffer.alloc(4);

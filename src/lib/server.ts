@@ -368,7 +368,7 @@ export class Server extends Network {
             client.challenge.min = command.asInt(0);
             client.challenge.max = command.asInt(1);
             client.challenge.data = command.asString(2);
-            console.log(client.challenge);
+            // console.log(client.challenge);
 
             if (client.challenge.data.length > 36) {
               this._logger.warn(f('client %s challenge data too long', client.uuid));
@@ -646,7 +646,7 @@ export class Server extends Network {
     const data = this._serializeCommand(command);
     // this._logger.debug(f('data', data));
     this._logger.debug(f('data hex: %s', data.toString('hex')));
-    this._logger.debug(f('data str: "%s"', data.toString()));
+    // this._logger.debug(f('data str: "%s"', data.toString()));
 
     this._logger.debug(f('write socket: %d', data.length));
     client.socket.write(data);

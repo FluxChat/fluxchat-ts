@@ -123,17 +123,17 @@ export class Cash {
       Buffer.from(nonce.toString()),
     ]);
 
-    console.log('input data buffer', inputData);
-    console.log('input data str %d "%s"', inputData.toString().length, inputData.toString());
-    console.log('input data hex', inputData.toString('hex'));
+    // console.log('input data buffer', inputData);
+    // console.log('input data str %d "%s"', inputData.toString().length, inputData.toString());
+    // console.log('input data hex', inputData.toString('hex'));
 
     const hash = createHash('sha256');
     const digest1 = hash.update(inputData.toString()).digest().toString('hex');
-    console.log('digest1', digest1); // TODO
+    // console.log('digest1', digest1); // TODO
 
     const hash2 = createHash('sha256');
     const digest2 = hash2.update(inputData).digest().toString('hex');
-    console.log('digest2', digest2); // TODO
+    // console.log('digest2', digest2); // TODO
 
     return digest1 === proof;
   }
