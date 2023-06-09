@@ -15,50 +15,47 @@ describe('Cash', () => {
     expect(cycles).toBeLessThan(10);
   });
 
-  test('verify', () => {
-    const testData = [
-      {
-        data: 'test1',
-        bits: 24,
-        proof: '000000b3b274d58f99bc290bf89160b7460e92c8efbb8b049dd66899e92a33b4',
-        nonce: 66156319,
-        verified: true,
-      },
-      {
-        data: 'test1',
-        bits: 10,
-        proof: '0000004388017c0c014e79067c32585f6bfa11be3a7b525f2512529c773ecf61',
-        nonce: 58067403,
-        verified: false,
-      },
-      {
-        data: 'test1',
-        bits: 20,
-        proof: '236ec5266d857b1372618e86eeb33c9850a01f73ea767ff5e656650cb11d555a',
-        nonce: 1234,
-        verified: false,
-      },
-      {
-        data: 'test1',
-        bits: 20,
-        proof: 'xyz',
-        nonce: 1234,
-        verified: false,
-      },
-      {
-        data: '8b21b089-6499-4fc9-afbf-31dfe10162da',
-        bits: 15,
-        proof: '000124217c6d5b57a20531ad8ed1364c1e897ea094e9ee812f7ffdf20d295a71',
-        nonce: 72941053,
-        verified: true,
-      },
-    ];
+  const testData = [
+    {
+      data: 'test1',
+      bits: 24,
+      proof: '000000b3b274d58f99bc290bf89160b7460e92c8efbb8b049dd66899e92a33b4',
+      nonce: 66156319,
+      verified: true,
+    },
+    {
+      data: 'test1',
+      bits: 10,
+      proof: '0000004388017c0c014e79067c32585f6bfa11be3a7b525f2512529c773ecf61',
+      nonce: 58067403,
+      verified: false,
+    },
+    {
+      data: 'test1',
+      bits: 20,
+      proof: '236ec5266d857b1372618e86eeb33c9850a01f73ea767ff5e656650cb11d555a',
+      nonce: 1234,
+      verified: false,
+    },
+    {
+      data: 'test1',
+      bits: 20,
+      proof: 'xyz',
+      nonce: 1234,
+      verified: false,
+    },
+    {
+      data: '08cf7f44-ab60-43d8-8e19-f31f4530be65',
+      bits: 15,
+      proof: '00017b469c38f93e650a3311fc28a3459b638ff5f48b527da4278689451be960',
+      nonce: 71620086,
+      verified: true,
+    },
+  ];
 
-    for (const test of testData) {
-      const cash = new Cash(Buffer.from(test.data), test.bits);
-      const verified = cash.verify(test.proof, test.nonce);
-
-      expect(verified).toBe(test.verified);
-    }
+  test.each(testData)('verify %#', (test) => {
+    const cash = new Cash(Buffer.from(test.data), test.bits);
+    const verified = cash.verify(test.proof, test.nonce);
+    expect(verified).toBe(test.verified);
   });
 });
