@@ -368,7 +368,6 @@ export class Server extends Network {
             client.challenge.min = command.asInt(0);
             client.challenge.max = command.asInt(1);
             client.challenge.data = command.asString(2);
-            // console.log(client.challenge);
 
             if (client.challenge.data.length > 36) {
               this._logger.warn(f('client %s challenge data too long', client.uuid));

@@ -1,6 +1,4 @@
 
-import { strict } from 'assert';
-import { inspect as i } from 'util';
 import { networkInterfaces, NetworkInterfaceInfo } from 'os';
 
 export function isIPv6Enabled(): boolean {
@@ -37,11 +35,9 @@ export class Argument {
   }
 
   public asInt(): number {
-    // console.log(this.value);
     if (this.value.length < 4) {
       const buf = Buffer.alloc(4);
       this.value.copy(buf, 0, 0, this.value.length);
-      // console.log(buf);
       return buf.readUInt32LE();
     }
 
@@ -132,10 +128,6 @@ export abstract class Network {
           if (argVal.length !== argLen_i) {
             throw new Error(`Argument length mismatch: ${argLen_i} != ${argVal.length}`);
           }
-          // strict.equal(argLen_i, argVal.length);
-
-          // console.log('argVal', argLen_i);
-          // console.log('argLen_i', argLen_i);
 
           payloadPos += argLen_i + argSizeLen;
 
@@ -153,8 +145,6 @@ export abstract class Network {
   }
 
   protected _serializeCommand(command: Command): Buffer {
-    // console.log('command', command);
-
     // Flags
     const flagLengthsAreFourBytes = command
       .args
