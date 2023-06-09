@@ -15,7 +15,7 @@ describe('Cash', () => {
     expect(cycles).toBeLessThan(10);
   });
 
-  const testData = [
+  test.each([
     {
       data: 'test1',
       bits: 24,
@@ -51,9 +51,7 @@ describe('Cash', () => {
       nonce: 71620086,
       verified: true,
     },
-  ];
-
-  test.each(testData)('verify %#', (testRow) => {
+  ])('verify %#', (testRow) => {
     const cash = new Cash(Buffer.from(testRow.data), testRow.bits);
     const verified = cash.verify(testRow.proof, testRow.nonce);
     expect(verified).toBe(testRow.verified);
