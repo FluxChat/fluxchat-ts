@@ -9,7 +9,8 @@
     "build-debug": "tsc --outDir ./build-debug --sourceMap",
     "start": "node build/src/app/server_app.js",
     "test": "jest",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "lint-fix": "eslint src --fix"
   },
   "homepage": "https://fluxchat.dev/",
   "repository": {

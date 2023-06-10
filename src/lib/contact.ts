@@ -26,7 +26,7 @@ export class Contact {
   public port: number | null = null;
   public is_valid = false;
 
-  static async resolve(raw: string, raddr: string | null = null): Promise<Contact> {
+  static parse(raw: string): Contact {
     const contact = new Contact();
 
     let items: string[];
@@ -55,13 +55,17 @@ export class Contact {
       // IPv6 address with port
       contact.address = items.slice(0, items.length - 1).join(':');
       contact.port = parseInt(items[items.length - 1]);
-
-      console.log('IPv6', contact.address, contact.port); // TODO
     }
 
     if (contact.address === '') {
       contact.address = 'private';
     }
+
+    return contact;
+  }
+
+  static async resolve(raw: string, raddr: string | null = null): Promise<Contact> {
+    const contact = this.parse(raw);
 
     if (contact.address === 'public') {
       contact.address = raddr;

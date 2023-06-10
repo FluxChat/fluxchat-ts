@@ -132,26 +132,24 @@ export class Server extends Network {
   private _onServerConnection(socket: TLSSocket): void {
     this._logger.info('_onConnection()');
 
-    this._logger.debug(f('address %s', socket.address()));
-    this._logger.debug(f('authorized %s', socket.authorized));
-    this._logger.debug(f('authorizationError %s', socket.authorizationError));
-    this._logger.debug(f('encrypted %s', socket.encrypted));
-    this._logger.debug(f('getCipher() %s', socket.getCipher()));
-    this._logger.debug(f('remoteAddress %s:%d', socket.remoteAddress, socket.remotePort));
-    this._logger.debug(f('localAddress %s:%d', socket.localAddress, socket.localPort));
+    this._logger.debug(f('address: %s', socket.address()));
+    this._logger.debug(f('authorized: %s', socket.authorized));
+    this._logger.debug(f('authorizationError: %s', socket.authorizationError));
+    this._logger.debug(f('encrypted: %s', socket.encrypted));
+    // this._logger.debug(f('getCipher() %s', socket.getCipher()));
+    this._logger.debug(f('cipher version: %s', socket.getCipher().version));
+    this._logger.debug(f('remoteAddress: %s:%d', socket.remoteAddress, socket.remotePort));
+    this._logger.debug(f('localAddress: %s:%d', socket.localAddress, socket.localPort));
 
     const client = new Client();
     const connectedClient = client as ConnectedClient;
 
     client.connMode = ConnectionMode.Connected;
-    client.socket = socket;
-    client.socket.on('ready', this._onClientReady.bind(this, client));
-    client.socket.on('data', this._onClientData.bind(this, connectedClient));
-    client.socket.on('end', this._onClientEnd.bind(this, client));
-    client.socket.on('close', this._onClientClose.bind(this, client));
-    client.socket.on('error', this._onClientError.bind(this, client));
-    client.socket.on('timeout', this._onClientTimeout.bind(this, client));
+    client.connMsg = 'connected, incoming';
+    client.dirMode = Direction.Inbound;
 
+    client.socket = socket;
+    this._clientBindEvents(connectedClient);
     this._clients.set(client.uuid, connectedClient);
   }
 
@@ -172,10 +170,11 @@ export class Server extends Network {
     this._logger.debug(f('_onClientConnect(%s)', client.uuid));
   }
 
-  private _onClientReady(client: Client): void {
+  private _onClientReady(client: ConnectedClient): void {
     this._logger.debug(f('_onClientReady(%s)', client));
 
     client.connMode = ConnectionMode.Connected;
+    client.connMsg = 'connected, outgoing';
   }
 
   private _onClientData(client: ConnectedClient, data: Buffer): void {
@@ -190,32 +189,36 @@ export class Server extends Network {
     }
   }
 
-  private _onClientEnd(client: Client): void {
+  private _onClientData2(client: ConnectedClient, data: Buffer): void {
+    this._logger.debug(f('_onClientData2(%s)', client));
+  }
+
+  private _onClientEnd(client: ConnectedClient): void {
     this._logger.debug(f('_onClientEnd(%s)', client));
 
     this._clients.delete(client.uuid);
     client.reset();
   }
 
-  private _onClientClose(client: Client, hadError: boolean): void {
+  private _onClientClose(client: ConnectedClient, hadError: boolean): void {
     this._logger.debug(f('_onClientClose(%s, %s)', client, hadError));
 
     this._clients.delete(client.uuid);
     client.reset();
   }
 
-  private _onClientError(client: Client, error: Error): void {
+  private _onClientError(client: ConnectedClient, error: Error): void {
     this._logger.error(f('_onClientError(%s, %s)', client, error.message));
   }
 
-  private _onClientTimeout(client: Client, socket: TLSSocket): void {
+  private _onClientTimeout(client: ConnectedClient, socket: TLSSocket): void {
     this._logger.warn(f('_onClientTimeout(%s, %s)', client, typeof socket));
   }
 
   private _debugClients(): void {
     this._logger.info(f('_debugClients() -> %d', this._clients.size));
-    for (const [c_uuid] of this._clients) {
-      this._logger.debug(f('debug client %s', c_uuid));
+    for (const [c_uuid, client] of this._clients) {
+      this._logger.debug(f('debug client %s: %d %s', c_uuid, client.auth, client.connMsg));
     }
   }
 
@@ -248,18 +251,19 @@ export class Server extends Network {
             const challenge_b = Buffer.from(challenge, 'utf8');
             client.cash = new Cash(challenge_b, this._config.challenge.min);
 
-            this._clientSendChallenge(client, challenge);
             client.auth |= AuthLevel.SentChallenge;
+            this._logger.debug(f('client auth: %d', client.auth));
+            this._clientSendChallenge(client, challenge);
           }
 
           else if ((client.auth & AuthLevel.ReceivedChallenge) != 0 && (client.auth & AuthLevel.SentId) == 0) {
             this._logger.debug(f('send ID to client %s', c_uuid));
 
+            client.auth |= AuthLevel.SentId;
+            this._logger.debug(f('client auth: %d', client.auth));
             if (client.challenge.proof !== null && client.challenge.nonce !== null) {
               this._clientSendId(client, client.challenge.proof, client.challenge.nonce);
             }
-
-            client.auth |= AuthLevel.SentId;
           }
 
           else if (client.auth == AuthLevel.Authenticated) {
@@ -299,6 +303,10 @@ export class Server extends Network {
 
     this._logger.debug(f('entries %s', _entries.size));
     this._addressbook.getAll().forEach((client: Client): void => {
+      this._logger.debug(f('client %s', client.uuid));
+      if (!client.hasContact()) {
+        return;
+      }
       if (!client.socket) {
         this._logger.debug(f('client %s, socket is null', client.uuid));
         this._clientConnect(client);
@@ -307,7 +315,7 @@ export class Server extends Network {
   }
 
   private _clientConnect(client: Client): void {
-    this._logger.info('_clientConnect()');
+    this._logger.info(f('_clientConnect(%s) -> %s:%s', client, client.address, client.port));
     const options = {
       host: client.address,
       port: client.port,
@@ -317,24 +325,29 @@ export class Server extends Network {
     const connectedClient = client as ConnectedClient;
 
     client.connMode = ConnectionMode.Connecting;
+    client.connMsg = 'connecting, outgoing';
     client.dirMode = Direction.Outbound;
 
     client.socket = tlsConnect(options, this._onClientConnect.bind(this, client));
+    this._clientBindEvents(connectedClient);
+    this._clients.set(client.uuid, connectedClient);
+  }
+
+  private _clientBindEvents(client: ConnectedClient): void {
     client.socket.on('ready', this._onClientReady.bind(this, client));
-    client.socket.on('data', this._onClientData.bind(this, connectedClient));
+    client.socket.on('data', this._onClientData.bind(this, client));
     client.socket.on('end', this._onClientEnd.bind(this, client));
     client.socket.on('close', this._onClientClose.bind(this, client));
     client.socket.on('error', this._onClientError.bind(this, client));
     client.socket.on('timeout', this._onClientTimeout.bind(this, client));
-
-    this._clients.set(client.uuid, connectedClient);
   }
 
   protected async _clientHandleCommand(client: ConnectedClient, command: Command): Promise<void> {
     this._logger.debug(f('_clientHandleCommand(%s, %s)', client, command));
 
+    //ConnectionMode.Authenticated
     if (command.group >= 2 && client.auth != AuthLevel.Authenticated) {
-      this._logger.warn(f('client %s not authenticated', client.uuid));
+      this._logger.warn(f('client %s not authenticated: %d', client.uuid, client.auth));
       client.connMode = ConnectionMode.Disconnected;
       client.connMsg = 'not authenticated';
       return;
@@ -362,8 +375,8 @@ export class Server extends Network {
               this._logger.warn(f('client %s already authenticated', client.uuid));
               break;
             }
-
             client.auth |= AuthLevel.ReceivedChallenge;
+            this._logger.debug(f('client auth: %d', client.auth));
 
             client.challenge.min = command.asInt(0);
             client.challenge.max = command.asInt(1);
@@ -546,7 +559,7 @@ export class Server extends Network {
 
               default:
                 const msg = f('client %s, unknown direction mode %d', client.uuid, client.dirMode);
-                this._logger.crit(msg);
+                this._logger.error(msg);
                 throw new Error(msg);
             }
 
@@ -563,7 +576,8 @@ export class Server extends Network {
 
             _client.socket = client.socket;
             _client.connMode = client.connMode;
-            _client.auth |= AuthLevel.ReceivedId;
+            _client.auth |= client.auth | AuthLevel.ReceivedId;
+            this._logger.debug(f('client auth: %d', client.auth));
             // TODO actions
             _client.challenge = client.challenge;
 
@@ -571,6 +585,8 @@ export class Server extends Network {
 
             if (cSwitch && !client.equals(_client)) {
               this._logger.debug(f('switch client %s', client.uuid));
+
+              // TODO: rebind all socket events
 
               this._clients.delete(client.uuid);
               this._clients.set(_client.uuid, _client as ConnectedClient);
