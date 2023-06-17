@@ -189,10 +189,6 @@ export class Server extends Network {
     }
   }
 
-  private _onClientData2(client: ConnectedClient, data: Buffer): void {
-    this._logger.debug(f('_onClientData2(%s)', client));
-  }
-
   private _onClientEnd(client: ConnectedClient): void {
     this._logger.debug(f('_onClientEnd(%s)', client));
 
@@ -272,7 +268,13 @@ export class Server extends Network {
             client.connMode = ConnectionMode.Authenticated;
           }
 
-          // TODO: check for timeout
+          // Auth Timeout
+          if (Date.now() - client.usedAt.getTime() >= this._config.client.auth_timeout) {
+            this._logger.warn(f('client %s, timeout: %s', c_uuid, client.usedAt));
+
+            client.connMode = ConnectionMode.Disconnected;
+            client.connMsg = 'timeout';
+          }
 
           break;
 
@@ -334,6 +336,10 @@ export class Server extends Network {
   }
 
   private _clientBindEvents(client: ConnectedClient): void {
+    this._logger.info(f('_clientBindEvents(%s)', client));
+
+    client.socket.removeAllListeners();
+
     client.socket.on('ready', this._onClientReady.bind(this, client));
     client.socket.on('data', this._onClientData.bind(this, client));
     client.socket.on('end', this._onClientEnd.bind(this, client));
@@ -586,10 +592,11 @@ export class Server extends Network {
             if (cSwitch && !client.equals(_client)) {
               this._logger.debug(f('switch client %s', client.uuid));
 
-              // TODO: rebind all socket events
-
+              client.socket.removeAllListeners();
               this._clients.delete(client.uuid);
               this._clients.set(_client.uuid, _client as ConnectedClient);
+
+              this._clientBindEvents(_client as ConnectedClient);
             }
 
             this._clientSendOk(client);

@@ -83,11 +83,8 @@ export class AddressBook extends Database<string, Client> {
     this._clientsByAddrPort.set(`${client.address}:${client.port}`, client);
   }
 
-  // TODO: tests
   public getNearestTo(node: Node, withContactInfos: boolean | null = null, limit = 20): Array<Client> {
-    /* eslint-disable */
-
-    const sorted = [...this._data.values()]
+    let sorted = [...this._data.values()]
       .filter((client: Client): boolean => {
         return client.node !== null;
       })
@@ -103,12 +100,12 @@ export class AddressBook extends Database<string, Client> {
       .slice(0, limit);
 
     if (withContactInfos !== null) {
-      // TODO withContactInfos
-      if (withContactInfos) {}
-      else {}
+      sorted = sorted.filter((client: Client): boolean => {
+        return withContactInfos && client.hasContact();
+      });
     }
 
-    return [];
+    return sorted;
   }
 
   public getClientById(id: string): Client | null {

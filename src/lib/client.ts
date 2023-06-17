@@ -11,12 +11,16 @@ import { Cash } from './cash';
 class Action {
   public id: string | null = null;
   public subid: string | null = null;
-  public is_strong = false;
+  public isStrong = false;
   public valid_until: Date | null = null;
   public func: any = null;
 
   public equals(other: Action): boolean {
     return this.id === other.id && this.subid === other.subid;
+  }
+
+  get fullId(): string {
+    return `${this.id}:${this.subid}`;
   }
 }
 
@@ -67,6 +71,7 @@ interface BaseClient {
 }
 
 export interface ConnectedClient extends BaseClient {
+  usedAt: Date;
   debugAdd?: string;
   connMode: ConnectionMode;
   connMsg: string;
@@ -105,7 +110,7 @@ export class Client implements Serializable, JsonClient, BaseClient {
   // Auth
   public auth: number = AuthLevel.NotAuthenticated;
 
-  public actions: Array<Action> = [];
+  public actions: Map<string, Action> = new Map();
   public challenge: Challenge;
   public cash: Cash | null = null;
 
@@ -167,7 +172,7 @@ export class Client implements Serializable, JsonClient, BaseClient {
     this.connMode = ConnectionMode.Disconnected;
     this.connMsg = null;
     this.auth = AuthLevel.NotAuthenticated;
-    this.actions = [];
+    this.actions = new Map();
     this.challenge = new Challenge();
     this.cash = null;
   }
@@ -192,5 +197,48 @@ export class Client implements Serializable, JsonClient, BaseClient {
     this._logger.info(f('incMeetings(%s)', this.uuid));
 
     this.meetings = (this.meetings || 0) + 1;
+  }
+
+  public addAction(action: Action): void {
+    this._logger.info(f('addAction(%s)', this.uuid));
+
+    this.actions.set(action.fullId, action);
+  }
+
+  public softResetActions(): void {
+    this._logger.info(f('softResetActions(%s)', this.uuid));
+  }
+
+  public hasAction(action: Action): boolean {
+    this._logger.info(f('hasAction(%s)', this.uuid));
+
+    return this.actions.has(action.fullId);
+  }
+
+  // Search for action by id and subid and remove it from actions list.
+  // Keep Strong actions.
+  // Force remove will also remove strong actions.
+  public resolveAction(id: string, subid: string, forceRemove = false): Action | null {
+    this._logger.info(f('resolveAction(%s, %s)', id, subid));
+
+    const fullId = `${id}:${subid}`;
+
+    if (this.actions.has(fullId)) {
+      const action = this.actions.get(fullId)!;
+
+      if (!action.isStrong || forceRemove) {
+        this.actions.delete(fullId);
+      }
+
+      return action;
+    }
+
+    return null;
+  }
+
+  public removeAction(action: Action): void {
+    this._logger.info(f('removeAction(%s)', this.uuid));
+
+    this.actions.delete(action.fullId);
   }
 }
